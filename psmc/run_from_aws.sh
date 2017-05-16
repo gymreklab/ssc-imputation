@@ -56,9 +56,36 @@ die()
 }
 
 # Install things
-apt-get update || die "Could not update"
-apt-get -y install awscli || die "Could not install aws"
-apt-get -y install git || die "Could not install git"
+sudo apt-get update || die "Could not update"
+sudo apt-get -y install awscli || die "Could not install aws"
+sudo apt-get -y install git || die "Could not install git"
+sudo apt-get -y install gcc libz-dev libncurses5-dev libbz2-dev liblzma-dev libcurl3-dev libssl-dev autoconf || die "Could not install devtools"
+mkdir ~/source || die "Could not create source dir"
+cd ~/source || die "Could not go to source dir"
+
+cd ~/source
+wget https://github.com/samtools/bcftools/releases/download/1.4.1/bcftools-1.4.1.tar.bz2
+tar -xvf bcftools-1.4.1.tar.bz2
+cd bcftools-1.4.1
+make
+sudo make install
+
+cd ~
+git clone https://github.com/samtools/htslib
+cd htslib
+autoheader
+autoconf
+./configure
+make
+sudo make install
+
+cd ~
+git clone https://github.com/samtools/samtools
+cd samtools
+autoconf -Wno-syntax 
+./configure
+make
+sudo make install
 
 # Set up AWS credentials
 mkdir -p ${AWS_DIR} || die "Could not create AWS dir"
@@ -76,17 +103,18 @@ cd ~
 git clone https://github.com/gymreklab/ssc-imputation || die "Could not clone github repo"
 
 # Download files
-mkdir /mnt/tmp || die "Could not make tmp directory"
-aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta ${REFFA}
-mkdir /mnt/tmp/consensus/
-aws s3 cp ${BAMPATHS} /mnt/tmp/bamfiles.txt
+sudo chown -R ubuntu /mnt
+sudo mkdir /mnt/tmp || die "Could not make tmp directory"
+sudo aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta ${REFFA}
+sudo mkdir /mnt/tmp/consensus/
+sudo aws s3 cp ${BAMPATHS} /mnt/tmp/bamfiles.txt
 
 # Create jobs
 cd /mnt/tmp/consensus/
 for bamfile in $(cat /mnt/tmp/bamfiles.txt)
 do
-    outfile=/mnt/tmp/consensus/$(basename ${bam}).fq.gz
-    echo "~/workspace/ssc-imputation/psmc/get_consensus.sh ${bamfile} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
+    outfile=/mnt/tmp/consensus/$(basename ${bamfile}).fq.gz
+    echo "~/ssc-imputation/psmc/get_consensus.sh ${bamfile} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
 done
 
 # Run jobs

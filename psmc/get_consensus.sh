@@ -1,8 +1,8 @@
 #!/bin/bash
 
 BAMFILE=$1
-OUTFILE=$2
-OUTBUCKET=$3
+OUTBUCKET=$2
+OUTFILE=$3
 REFFA=$4
 
 samtools mpileup -C50 -uf $REFFA $BAMFILE | bcftools call -c - \
