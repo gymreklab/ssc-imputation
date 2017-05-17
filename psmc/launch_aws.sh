@@ -34,12 +34,11 @@ STARTUP_SCRIPT=$(cat /home/mgymrek/workspace/ssc-imputation/psmc/run_from_aws.sh
     sed "s/\$4/${NUMPROC}/")
 STARTUP_SCRIPT_ENCODE="$(echo "${STARTUP_SCRIPT}" | base64 -w 0)"
 
-LAUNCH_SPEC="{\"ImageId\":\"${IMAGE_ID}\",\"SecurityGroupIds\":[\"sg-5e914222\"], \"KeyName\":\"${KEYNAME}\",\"InstanceType\":\"${INSTANCE_TYPE}\", \"UserData\":\"${STARTUP_SCRIPT_ENCODE}\"}"
+LAUNCH_SPEC="{\"ImageId\":\"${IMAGE_ID}\",\"Placement\":{\"AvailabilityZone\": \"us-east-1b\"},\"SecurityGroupIds\":[\"sg-5e914222\"], \"KeyName\":\"${KEYNAME}\",\"InstanceType\":\"${INSTANCE_TYPE}\", \"UserData\":\"${STARTUP_SCRIPT_ENCODE}\"}"
 
 aws ec2 request-spot-instances \
     --spot-price ${SPOT_PRICE} \
     --instance-count 1 \
-    --availability-zone-group us-east-1a \
     --type one-time \
     --launch-specification "${LAUNCH_SPEC}"
 

@@ -5,7 +5,9 @@ AWS_SECRET_KEY=$2
 BAMPATHS=$3
 NUMPROC=$4
 
-AWS_DIR=${HOME}/.aws
+HOMEDIR=/root/
+
+AWS_DIR=${HOMEDIR}/.aws
 AWS_CONFIG_FILE=${AWS_DIR}/config
 AWS_CRED_FILE=${AWS_DIR}/credentials
 JOBSFILE=/home/ubuntu/jobs.txt
@@ -40,7 +42,7 @@ terminate() {
     aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${INSTANCE_ID}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
+#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
     exit 1 # shouldn't happen
 }
 
@@ -62,17 +64,17 @@ sudo apt-get update || die "Could not update"
 sudo apt-get -y install awscli || die "Could not install aws"
 sudo apt-get -y install git || die "Could not install git"
 sudo apt-get -y install make gcc libz-dev libncurses5-dev libbz2-dev liblzma-dev libcurl3-dev libssl-dev autoconf || die "Could not install devtools"
-mkdir -p ~/source || die "Could not create source dir"
-cd ~/source || die "Could not go to source dir"
+mkdir -p ${HOMEDIR}/source || die "Could not create source dir"
+cd ${HOMEDIR}/source || die "Could not go to source dir"
 
-cd ~/source
+cd ${HOMEDIR}/source
 wget https://github.com/samtools/bcftools/releases/download/1.4.1/bcftools-1.4.1.tar.bz2
 tar -xvf bcftools-1.4.1.tar.bz2
 cd bcftools-1.4.1
 make
 sudo make install
 
-cd ~
+cd ${HOMEDIR}
 git clone https://github.com/samtools/htslib
 cd htslib
 autoheader
@@ -81,7 +83,7 @@ autoconf
 make
 sudo make install
 
-cd ~
+cd ${HOMEDIR}
 git clone https://github.com/samtools/samtools
 cd samtools
 autoconf -Wno-syntax 
@@ -90,6 +92,7 @@ make
 sudo make install
 
 # Set up AWS credentials
+echo "Setting up AWS credentials in ${AWS_DIR}"
 mkdir -p ${AWS_DIR} || die "Could not create AWS dir"
 echo "[default]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
@@ -101,11 +104,10 @@ echo "aws_secret_access_key = ${AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Cou
 echo "aws_access_key_id = ${AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 
 # Get github
-cd ~
+cd ${HOMEDIR}
 git clone https://github.com/gymreklab/ssc-imputation || die "Could not clone github repo"
 
 # Download files
-sudo chown -R ubuntu /mnt
 sudo mkdir -p /mnt/tmp || die "Could not make tmp directory"
 sudo aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta ${REFFA}
 sudo mkdir -p /mnt/tmp/consensus/
@@ -116,8 +118,12 @@ cd /mnt/tmp/consensus/
 for bamfile in $(cat /mnt/tmp/bamfiles.txt)
 do
     outfile=/mnt/tmp/consensus/$(basename ${bamfile}).fq.gz
-    echo "~/ssc-imputation/psmc/get_consensus.sh ${bamfile} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
+    aws s3 ls ${bamfile}
+    echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus.sh ${bamfile} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
 done
+
+echo "user" $USER
+aws s3 ls
 
 # Run jobs
 cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c % || die "Error running jobs"
