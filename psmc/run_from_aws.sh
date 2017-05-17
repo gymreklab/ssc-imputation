@@ -42,7 +42,7 @@ terminate() {
     aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${INSTANCE_ID}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
+    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID}
     exit 1 # shouldn't happen
 }
 
