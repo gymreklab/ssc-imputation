@@ -38,7 +38,7 @@ terminate() {
     INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID}
+#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
     exit 1 # shouldn't happen
 }
 
