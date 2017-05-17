@@ -8,7 +8,7 @@ NUMPROC=$4
 AWS_DIR=${HOME}/.aws
 AWS_CONFIG_FILE=${AWS_DIR}/config
 AWS_CRED_FILE=${AWS_DIR}/credentials
-JOBSFILE=jobs.txt
+JOBSFILE=/home/ubuntu/jobs.txt
 
 OUTBUCKET=s3://ssc-psmc
 REFFA=/mnt/tmp/Homo_sapiens_assembly19.fasta
@@ -36,9 +36,11 @@ Does the following:
 
 terminate() {
     INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+    # Get log
+    aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${INSTANCE_ID}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
+    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO uncomment
     exit 1 # shouldn't happen
 }
 
@@ -59,8 +61,8 @@ die()
 sudo apt-get update || die "Could not update"
 sudo apt-get -y install awscli || die "Could not install aws"
 sudo apt-get -y install git || die "Could not install git"
-sudo apt-get -y install gcc libz-dev libncurses5-dev libbz2-dev liblzma-dev libcurl3-dev libssl-dev autoconf || die "Could not install devtools"
-mkdir ~/source || die "Could not create source dir"
+sudo apt-get -y install make gcc libz-dev libncurses5-dev libbz2-dev liblzma-dev libcurl3-dev libssl-dev autoconf || die "Could not install devtools"
+mkdir -p ~/source || die "Could not create source dir"
 cd ~/source || die "Could not go to source dir"
 
 cd ~/source
@@ -88,7 +90,7 @@ make
 sudo make install
 
 # Set up AWS credentials
-mkdir -p ${AWS_DIR} || die "Could not create AWS dir"
+mkdir -p -p ${AWS_DIR} || die "Could not create AWS dir"
 echo "[default]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"
@@ -104,9 +106,9 @@ git clone https://github.com/gymreklab/ssc-imputation || die "Could not clone gi
 
 # Download files
 sudo chown -R ubuntu /mnt
-sudo mkdir /mnt/tmp || die "Could not make tmp directory"
+sudo mkdir -p /mnt/tmp || die "Could not make tmp directory"
 sudo aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta ${REFFA}
-sudo mkdir /mnt/tmp/consensus/
+sudo mkdir -p /mnt/tmp/consensus/
 sudo aws s3 cp ${BAMPATHS} /mnt/tmp/bamfiles.txt
 
 # Create jobs
@@ -118,7 +120,6 @@ do
 done
 
 # Run jobs
-cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c %
+cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c % || die "Error running jobs"
 
 terminate
-
