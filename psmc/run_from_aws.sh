@@ -75,7 +75,7 @@ git clone https://github.com/samtools/htslib
 cd htslib
 autoheader
 autoconf
-./configure
+./configure --enable-libcurl
 make
 sudo make install
 
