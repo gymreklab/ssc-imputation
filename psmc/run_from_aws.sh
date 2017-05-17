@@ -90,7 +90,7 @@ make
 sudo make install
 
 # Set up AWS credentials
-mkdir -p -p ${AWS_DIR} || die "Could not create AWS dir"
+mkdir -p ${AWS_DIR} || die "Could not create AWS dir"
 echo "[default]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"

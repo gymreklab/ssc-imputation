@@ -25,16 +25,16 @@ test -z ${KEYNAME} && usage
 
 # Instance details
 SPOT_PRICE=0.50
-INSTANCE_TYPE=t2.micro
+INSTANCE_TYPE=c4.large
 IMAGE_ID=ami-80861296
 
 STARTUP_SCRIPT=$(cat /home/mgymrek/workspace/ssc-imputation/psmc/run_from_aws.sh | \
-    sed "s/\$1/${AWS_ACCESS_KEY}/" | sed "s/\$2/${AWS_SECRET_KEY}/" | \
-    sed "s/\$3/${BAMPATHS}/" | \
+    sed "s/\$1/${AWS_ACCESS_KEY}/" | sed "s~\$2~${AWS_SECRET_KEY}~" | \
+    sed "s~\$3~${BAMPATHS}~" | \
     sed "s/\$4/${NUMPROC}/")
-STARTUP_SCRIPT_ENCODE="$(echo "${STARTUP_SCRIPT}" | base64 -)"
+STARTUP_SCRIPT_ENCODE="$(echo "${STARTUP_SCRIPT}" | base64 -w 0)"
 
-LAUNCH_SPEC="{\"ImageId\":\"${IMAGE_ID}\",\"KeyName\":\"${KEYNAME}\",\"InstanceType\":\"${INSTANCE_TYPE}\", \"UserData\":\"${STARTUP_SCRIPT_ENCODE}\"}"
+LAUNCH_SPEC="{\"ImageId\":\"${IMAGE_ID}\",\"SecurityGroupIds\":[\"sg-5e914222\"], \"KeyName\":\"${KEYNAME}\",\"InstanceType\":\"${INSTANCE_TYPE}\", \"UserData\":\"${STARTUP_SCRIPT_ENCODE}\"}"
 
 aws ec2 request-spot-instances \
     --spot-price ${SPOT_PRICE} \
