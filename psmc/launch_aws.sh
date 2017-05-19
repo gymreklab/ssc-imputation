@@ -24,7 +24,7 @@ test -z ${NUMPROC} && usage
 test -z ${KEYNAME} && usage
 
 # Instance details
-SPOT_PRICE=0.50
+SPOT_PRICE=0.05
 INSTANCE_TYPE=c4.large
 IMAGE_ID=ami-80861296
 

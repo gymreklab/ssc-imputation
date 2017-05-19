@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BAMPATHS=s3://ssc-psmc/batches/bamfilesaa
+BAMPATHS=s3://ssc-psmc/batches/bamfilesaa # Testing one batch
 AWS_ACCESS_KEY=$(cat ~/.aws/credentials | grep "aws_access" | cut -f 3 -d' ')
 AWS_SECRET_KEY=$(cat ~/.aws/credentials | grep "aws_secret" | cut -f 3 -d' ')
 NUMPROC=3
