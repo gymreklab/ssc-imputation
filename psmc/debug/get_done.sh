@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TODO first download all s3 logs
+LOGDIR=$1
 
 # Get broken ones
-cat *.log | grep -A 1 -B 1 "<mpileup>" | grep upload | cut -f 2 -d':' | sed 's/ .\///' | sed 's/ to s3//' > done.txt
+cat ${LOGDIR}/*.log | grep -A 1 -B 1 "<mpileup>" | grep upload | cut -f 2 -d':' | sed 's/ .\///' | sed 's/ to s3//' > done.txt
