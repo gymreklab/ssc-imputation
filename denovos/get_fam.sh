@@ -1,9 +1,10 @@
 #!/bin/bash
 
 IDFILE=~/workspace/ssc-imputation/metadata/ssc_family_ids.txt
+PILOTFILE=pilot_families.txt
 
 # Get fam from SSC ids file
-families=$(cat ${IDFILE} | cut -f 1 -d'.' | sort | uniq)
+families=$(cat ${IDFILE} | cut -f 1 -d'.' | grep -v -w -f ${PILOTFILE} | sort | uniq)
 for family in ${families}
 do
     father=$(cat ${IDFILE} | grep ${family}.fa | cut -f 2)

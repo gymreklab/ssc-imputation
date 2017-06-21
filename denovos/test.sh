@@ -10,9 +10,5 @@ ${DENOVOFINDER} \
     --str-vcf ${VCFFILE} \
     --fam ${FAMFILE} \
     --snp-vcf ${SNPVCF} \
-    --denovo-vcf ${OUTDIR}/$(basename ${VCFFILE} .vcf.gz )_denovos_withsnps.vcf.gz
-
-${DENOVOFINDER} \
-    --str-vcf ${VCFFILE} \
-    --fam ${FAMFILE} \
-    --denovo-vcf ${OUTDIR}/$(basename ${VCFFILE} .vcf.gz )_denovos_trio.vcf.gz
+    --denovo-vcf ${OUTDIR}/test_denovos_withsnps.vcf.gz
+tabix -p vcf ${OUTDIR}/test_denovos_withsnps.vcf.gz
