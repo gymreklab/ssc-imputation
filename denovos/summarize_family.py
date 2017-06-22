@@ -2,7 +2,6 @@
 """
 Summarize family de novo results
 
-TODO: filters?
 """
 
 import argparse
@@ -11,24 +10,33 @@ import sys
 
 def ProcessLine(x, outf, prob, family):
     probs = [x["post_nomut"],x["post_mut_affected"],x["post_mut_unaffected"]]
+    if x["filter"]: return
     if max(probs) < prob:
-        sys.stderr.write("Skiping %s %s %s\n"%(family, x["chrom"], x["pos"]))
+        sys.stderr.write("Skipping %s %s %s, max prob too low\n"%(family, x["chrom"], x["pos"]))
+        return
+    if x["mend_lengths"]==0:
+        sys.stderr.write("Skipping %s %s %s, both children de novo\n"%(family, x["chrom"], x["pos"]))
         return
     items = map(str, [family, x["chrom"], x["pos"]])
     if probs[0] == max(probs):
         outf.write("\t".join(items + ["0", "0", "0", "0"])+"\n")
     elif probs[1] == max(probs):
-        if x["mend_lengths"]:
+        if x["mend_lengths"] == 1:
+            if x["mend_lengths_other"] == 2:
+                sys.stderr.write("Skipping %s %s %s, new allele in parent\n"%(family, x["chrom"], x["pos"]))
+                return
             outf.write("\t".join(items + ["1", "0", "0", "0"])+"\n")
         else:
             outf.write("\t".join(items + ["0", "0", "1", "0"])+"\n")
     else:
-        if x["mend_lengths"]:
+        if x["mend_lengths"] == 1:
+            if x["mend_lengths_other"] == 2:
+                sys.stderr.write("Skipping %s %s %s, new allele in parent\n"%(family, x["chrom"], x["pos"]))
+                return
             outf.write("\t".join(items + ["0", "1", "0", "0"])+"\n")
         else:
             outf.write("\t".join(items + ["0", "0", "0", "1"])+"\n")
     return
-
 
 def main():
     parser = argparse.ArgumentParser(__doc__)

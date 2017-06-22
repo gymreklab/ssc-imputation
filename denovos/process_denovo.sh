@@ -71,15 +71,4 @@ echo "chrom,pos,nomut_ll,anymut_ll,denovo_ll,other_ll,period,ref,alt,gtdata_affe
 join -t $'\t' ${TMPDIR}/${family}.${chrom}.denovo ${TMPDIR}/${family}.${chrom}.gts | \
     awk -v"chrom=$chrom" '{print chrom "\t" $0}' >> ${outfile}
 
-echo "[process_denovo.sh] Running filter_denovos.py..."
-./filter_denovos.py \
-    --infile ${outfile} \
-    --outfile ${outfile}.filtered \
-    --minq-child ${MINQ} --minq-father ${MINQ} --minq-mother ${MINQ} \
-    --minst-child ${MINST} --minst-father ${MINST} --minst-mother ${MINST} \
-    --min-spanning-child ${MINSPAN} --min-spanning-father ${MINSPAN} --min-spanning-mother ${MINSPAN} \
-    --min-percsupp-child ${MINSUPP} --min-percsupp-father ${MINSUPP} --min-percsupp-mother ${MINSUPP} \
-    --parent-allele-count ${PARCOUNT} \
-    --unit
-
 exit 0

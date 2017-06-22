@@ -133,10 +133,12 @@ def GetFamilyGB(x):
     for key in family_items:
         gb[key] = map(int, family_items[key][gb_col].split("|"))
     return gb
-        
+
 def GetMendLengths(x):
     """
-    If lengths of genotypes can be explained by mend inheritance, return True
+    0: neither sibling follows mendelian
+    1: one does one doesn't
+    2: both siblings follow mendelian inheritance
     """
     family_gb = GetFamilyGB(x)
     # Test each child
@@ -150,7 +152,7 @@ def GetMendLengths(x):
        family_gb["unaffected"][1] in family_gb["mother"]: unaffected = True
     if family_gb["unaffected"][1] in family_gb["father"] and \
        family_gb["unaffected"][0] in family_gb["mother"]: unaffected = True
-    return affected and unaffected
+    return int(affected)+int(unaffected)
 
 def GetMendLengthsOther(x):
     """
@@ -164,7 +166,7 @@ def GetMendLengthsOther(x):
        family_gb["affected"][1] in parent_alleles: affected = True
     if family_gb["unaffected"][0] in parent_alleles and \
        family_gb["unaffected"][1] in parent_alleles: unaffected = True
-    return affected and unaffected
+    return int(affected)+int(unaffected)
 
 def GetNewAllele(x):
     """

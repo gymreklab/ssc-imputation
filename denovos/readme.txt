@@ -6,3 +6,4 @@
   - ./summarize_family.py summarizes family info
 
 ./combine_family_results.sh compiles all family results into a single file
+  - calc_denovo_sig.py calculates sig of excess in affected vs. unaffected perlocus, and overall
