@@ -12,7 +12,7 @@ AWS_CONFIG_FILE=${AWS_DIR}/config
 AWS_CRED_FILE=${AWS_DIR}/credentials
 JOBSFILE=/home/ubuntu/jobs.txt
 
-OUTBUCKET=s3://ssc-psmc
+OUTBUCKET=s3://ssc-psmc/round2
 REFFA=/mnt/tmp/Homo_sapiens_assembly19.fasta
 
 usage()
@@ -124,9 +124,6 @@ do
     aws s3 ls ${bamfile}
     echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
 done
-
-echo "user" $USER
-aws s3 ls
 
 # Run jobs
 cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c % || die "Error running jobs"

@@ -4,7 +4,7 @@
 
 BAMFILES=../metadata/ssc_parent_bampaths.txt
 DONE=completed_round1.txt
-JOBSFILE=jobs_round.txt
+JOBSFILE=jobs_round2.txt
 
 for bamfile in $(cat ${BAMFILES})
 do
