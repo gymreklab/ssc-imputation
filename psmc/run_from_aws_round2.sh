@@ -1,9 +1,11 @@
 #!/bin/bash
 
-AWS_ACCESS_KEY=$1
-AWS_SECRET_KEY=$2
-BAMPATHS=$3
-NUMPROC=$4
+LAB_AWS_ACCESS_KEY=$1
+LAB_AWS_SECRET_KEY=$2
+SSC_AWS_ACCESS_KEY=$3
+SSC_AWS_SECRET_KEY=$4
+BAMPATHS=$5
+NUMPROC=$6
 
 HOMEDIR=/root/
 
@@ -20,7 +22,7 @@ usage()
     BASE=$(basename -- "$0")
     echo "Run PSMC analysis
 Usage:
-    $BASE <aws access key> <aws secret key> <bamfileslist> <numproc>
+    $BASE <lab aws access key> <lab aws secret key> <ssc aws access key> <ssc aws secret key> <bamfileslist> <numproc>
        - aws access key and aws secret keys are for AWS configuration
        - bamfileslist has list of S3 paths to bams to process. It must be stored on S3
        - numproc gives number of jobs to run at once
@@ -46,8 +48,10 @@ terminate() {
     exit 1 # shouldn't happen
 }
 
-test -z ${AWS_ACCESS_KEY} && usage
-test -z ${AWS_SECRET_KEY} && usage
+test -z ${LAB_AWS_ACCESS_KEY} && usage
+test -z ${LAB_AWS_SECRET_KEY} && usage
+test -z ${SSC_AWS_ACCESS_KEY} && usage
+test -z ${SSC_AWS_SECRET_KEY} && usage
 test -z ${BAMPATHS} && usage
 test -z ${NUMPROC} && usage
 
@@ -91,17 +95,29 @@ autoconf -Wno-syntax
 make
 sudo make install
 
-# Set up AWS credentials
+# Set up AWS credentials - config file
 echo "Setting up AWS credentials in ${AWS_DIR}"
 mkdir -p ${AWS_DIR} || die "Could not create AWS dir"
 echo "[default]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"
-echo "aws_secret_access_key = ${AWS_SECRET_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
-echo "aws_access_key_id = ${AWS_ACCESS_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_secret_access_key = ${LAB_AWS_SECRET_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_access_key_id = ${LAB_AWS_ACCESS_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "[profile ssc]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
+echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
+echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"
+echo "aws_secret_access_key = ${SSC_AWS_SECRET_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_access_key_id = ${SSC_AWS_ACCESS_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+# Set up AWS credentials - cred file
 echo "[default]" > ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
-echo "aws_secret_access_key = ${AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
-echo "aws_access_key_id = ${AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_secret_access_key = ${LAB_AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_access_key_id = ${LAB_AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "[ssc]" > ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_secret_access_key = ${SSC_AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "aws_access_key_id = ${SSC_AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+export AWS_DEFAULT_PROFILE=default
+export AWS_ACCESS_KEY_ID=${LAB_AWS_ACCESS_KEY}
+export AWS_SCRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
 
 # Get github
 cd ${HOMEDIR}
@@ -122,7 +138,7 @@ do
     bamfile=$(echo $job | cut -d ':' -f 1)
     chrom=$(echo $job | cut -d ':' -f 2)
     aws s3 ls ${bamfile}
-    echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA}" >> ${JOBSFILE}
+    echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA} ${LAB_AWS_ACCESS_KEY} ${LAB_AWS_SECRET_KEY} ${SSC_AWS_ACCESS_KEY} ${SSC_AWS_SECRET_KEY}" >> ${JOBSFILE}
 done
 
 # Run jobs
