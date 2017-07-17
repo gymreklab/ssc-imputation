@@ -18,7 +18,7 @@ out=$(dirname ${OUTFILE})/$(basename ${OUTFILE} .gz)_${CHROM}.gz
 export AWS_DEFAULT_PROFILE=ssc
 export AWS_ACCESS_KEY_ID=${SSC_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${SSC_AWS_SECRET_KEY}
-sudo samtools mpileup -r ${CHROM} -C50 -uf $REFFA $BAMFILE | bcftools call -c - \
+sudo -E samtools mpileup -r ${CHROM} -C50 -uf $REFFA $BAMFILE | bcftools call -c - \
       | vcfutils.pl vcf2fq -d 10 -D 100 | gzip > ${out}
 # Set back profile to default
 export AWS_DEFAULT_PROFILE=default
