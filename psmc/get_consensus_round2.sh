@@ -17,12 +17,12 @@ out=$(dirname ${OUTFILE})/$(basename ${OUTFILE} .gz)_${CHROM}.gz
 # Temporarily set default profile to ssc
 export AWS_DEFAULT_PROFILE=ssc
 export AWS_ACCESS_KEY_ID=${SSC_AWS_ACCESS_KEY}
-export AWS_SCRET_ACCESS_KEY=${SSC_AWS_SECRET_KEY}
+export AWS_SECRET_ACCESS_KEY=${SSC_AWS_SECRET_KEY}
 sudo samtools mpileup -r ${CHROM} -C50 -uf $REFFA $BAMFILE | bcftools call -c - \
       | vcfutils.pl vcf2fq -d 10 -D 100 | gzip > ${out}
 # Set back profile to default
 export AWS_DEFAULT_PROFILE=default
 export AWS_ACCESS_KEY_ID=${LAB_AWS_ACCESS_KEY}
-export AWS_SCRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
+export AWS_SECRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
 aws s3 cp ${out} ${OUTBUCKET}/$(basename ${out})
 rm ${out}
