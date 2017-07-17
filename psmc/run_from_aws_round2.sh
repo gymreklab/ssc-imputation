@@ -103,7 +103,7 @@ echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CON
 echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "aws_secret_access_key = ${LAB_AWS_SECRET_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 echo "aws_access_key_id = ${LAB_AWS_ACCESS_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
-echo "[profile ssc]" > ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
+echo "[profile ssc]" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "output = table" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "region = us-east-1" >> ${AWS_CONFIG_FILE}  || die "Could not write to ${AWS_CONFIG_FILE}"
 echo "aws_secret_access_key = ${SSC_AWS_SECRET_KEY}" >> ${AWS_CONFIG_FILE} || die "Could not write to ${AWS_CRED_FILE}"
@@ -112,7 +112,7 @@ echo "aws_access_key_id = ${SSC_AWS_ACCESS_KEY}" >> ${AWS_CONFIG_FILE} || die "C
 echo "[default]" > ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 echo "aws_secret_access_key = ${LAB_AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 echo "aws_access_key_id = ${LAB_AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
-echo "[ssc]" > ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
+echo "[ssc]" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 echo "aws_secret_access_key = ${SSC_AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 echo "aws_access_key_id = ${SSC_AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 export AWS_DEFAULT_PROFILE=default
@@ -125,8 +125,8 @@ git clone https://github.com/gymreklab/ssc-imputation || die "Could not clone gi
 
 # Download files
 sudo mkdir -p /mnt/tmp || die "Could not make tmp directory"
-sudo aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta ${REFFA}
-sudo aws s3 cp ${OUTBUCKET}/Homo_sapiens_assembly19.fasta.fai ${REFFA}.fai
+sudo aws s3 cp s3://ssc-psmc/Homo_sapiens_assembly19.fasta ${REFFA}
+sudo aws s3 cp s3://ssc-psmc/Homo_sapiens_assembly19.fasta.fai ${REFFA}.fai
 sudo mkdir -p /mnt/tmp/consensus/
 sudo aws s3 cp ${BAMPATHS} /mnt/tmp/bamfiles.txt
 
