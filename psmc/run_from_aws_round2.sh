@@ -135,8 +135,8 @@ cd /mnt/tmp/consensus/
 for job in $(cat /mnt/tmp/bamfiles.txt)
 do
     outfile=/mnt/tmp/consensus/$(basename ${bamfile}).fq.gz
-    bamfile=$(echo $job | cut -d ':' -f 1)
-    chrom=$(echo $job | cut -d ':' -f 2)
+    bamfile=$(echo $job | cut -d ':' -f 1,2)
+    chrom=$(echo $job | cut -d ':' -f 3)
     aws s3 ls ${bamfile}
     echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA} ${LAB_AWS_ACCESS_KEY} ${LAB_AWS_SECRET_KEY} ${SSC_AWS_ACCESS_KEY} ${SSC_AWS_SECRET_KEY}" >> ${JOBSFILE}
 done
