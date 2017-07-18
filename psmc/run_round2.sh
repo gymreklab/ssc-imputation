@@ -7,7 +7,7 @@ SSC_AWS_SECRET_KEY=$(cat ~/.aws/ssc_credentials | grep "aws_secret" | cut -f 3 -
 
 NUMPROC=3
 
-for batch in $(ls -l batches_round2/ | awk '{print $NF}')
+for batch in $(ls -l batches_round2/ | awk '{print $NF}' | grep bamfiles2 )
 do
     bampaths=s3://ssc-psmc/batches_round2/${batch}
     ./launch_aws_round2.sh ${bampaths} \
