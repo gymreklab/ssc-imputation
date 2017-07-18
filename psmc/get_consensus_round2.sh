@@ -16,12 +16,6 @@ out=$(dirname ${OUTFILE})/$(basename ${OUTFILE} .gz)_${CHROM}.gz
 
 echo "[get_consensus_round2.sh ${out}]"
 
-# First check if outfile already in S3. If yes, exit
-x=$(aws s3 ls ${OUTBUCKET}/$(basename ${out}) | awk '{print $NF}')  
-echo $x ${out}
-[[ -z "${x// }" ]] || echo "found $x, should exit" #exit 0
-
-# Proceed
 # Temporarily set default profile to ssc
 export AWS_DEFAULT_PROFILE=ssc
 export AWS_ACCESS_KEY_ID=${SSC_AWS_ACCESS_KEY}
