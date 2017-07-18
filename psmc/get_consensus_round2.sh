@@ -18,7 +18,8 @@ echo "[get_consensus_round2.sh ${out}]"
 
 # First check if outfile already in S3. If yes, exit
 x=$(aws s3 ls ${OUTBUCKET}/$(basename ${out}) | awk '{print $NF}')  
-[[ -z "${x// }" ]] || exit 0
+echo $x
+[[ -z "${x// }" ]] || echo "found $x, should exit" #exit 0
 
 # Proceed
 # Temporarily set default profile to ssc
