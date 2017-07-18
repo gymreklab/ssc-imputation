@@ -117,7 +117,7 @@ echo "aws_secret_access_key = ${SSC_AWS_SECRET_KEY}" >> ${AWS_CRED_FILE} || die 
 echo "aws_access_key_id = ${SSC_AWS_ACCESS_KEY}" >> ${AWS_CRED_FILE} || die "Could not write to ${AWS_CRED_FILE}"
 export AWS_DEFAULT_PROFILE=default
 export AWS_ACCESS_KEY_ID=${LAB_AWS_ACCESS_KEY}
-export AWS_SCRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
+export AWS_SECRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
 
 # Get github
 cd ${HOMEDIR}
@@ -130,8 +130,23 @@ sudo aws s3 cp s3://ssc-psmc/Homo_sapiens_assembly19.fasta.fai ${REFFA}.fai
 sudo mkdir -p /mnt/tmp/consensus/
 sudo aws s3 cp ${BAMPATHS} /mnt/tmp/bamfiles.txt
 
-# Create jobs
+# Go to working directory
 cd /mnt/tmp/consensus/
+
+# Download all indices first, setting profile temporarily to ssc
+export AWS_DEFAULT_PROFILE=ssc
+export AWS_ACCESS_KEY_ID=${SSC_AWS_ACCESS_KEY}
+export AWS_SECRET_ACCESS_KEY=${SSC_AWS_SECRET_KEY}
+for indfile in $(cat /mnt/tmp/bamfiles.txt | cut -d':' -f 1,2 | sort | uniq | sed 's/.bam/.bai/')
+do
+    aws s3 cp ${indfile} .
+done
+# Set back profile to default
+export AWS_DEFAULT_PROFILE=default
+export AWS_ACCESS_KEY_ID=${LAB_AWS_ACCESS_KEY}
+export AWS_SECRET_ACCESS_KEY=${LAB_AWS_SECRET_KEY}
+
+# Create jobs
 for job in $(cat /mnt/tmp/bamfiles.txt)
 do
     bamfile=$(echo $job | cut -d ':' -f 1,2)
@@ -142,6 +157,6 @@ do
 done
 
 # Run jobs
-cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c % || die "Error running jobs"
+cat ${JOBSFILE} | xargs -n 1 -P${NUMPROC} -I% bash -c % #|| die "Error running jobs"
 
 terminate
