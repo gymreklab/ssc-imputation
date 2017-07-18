@@ -14,6 +14,8 @@ SSC_AWS_SECRET_KEY=$9
 
 out=$(dirname ${OUTFILE})/$(basename ${OUTFILE} .gz)_${CHROM}.gz
 
+echo "[get_consensus_round2.sh ${out}]"
+
 # First check if outfile already in S3. If yes, move on
 x=$(aws s3 ls ${OUTBUCKET}/$(basename ${out}) | awk '{print $NF}')  
 test -z $x || exit 0
