@@ -1,9 +1,17 @@
 #!/bin/bash
 
+BATCHDIR=$1
+BATCHSIZE=$2
+DONE=$3
+
+# Clear existing batch dir
+mkdir -p ${BATCHDIR}
+rm ${BATCHDIR}/*
+
 # Batch files should have format bampath:chrom
 
 BAMFILES=../metadata/ssc_parent_bampaths.txt
-DONE=completed_round1.txt
+#DONE=completed_round1.txt
 JOBSFILE=jobs_round2.txt
 
 for bamfile in $(cat ${BAMFILES})
@@ -22,5 +30,5 @@ do
     done
 done > ${JOBSFILE}
 
-split -l 200 ${JOBSFILE} batches_round2/bamfiles2
-aws s3 sync batches_round2/ s3://ssc-psmc/batches_round2
+split -l ${BATCHSIZE} ${JOBSFILE} ${BATCHDIR}/bamfiles2
+aws s3 sync ${BATCHDIR}/ s3://ssc-psmc/${BATCHDIR}

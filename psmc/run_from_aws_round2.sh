@@ -157,7 +157,7 @@ do
     x=$(aws s3 ls ${OUTBUCKET}/$(basename ${out}) | awk '{print $NF}')  
     [[ -z "${x// }" ]] || continue
     # Output job
-    echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA} ${LAB_AWS_ACCESS_KEY} ${LAB_AWS_SECRET_KEY} ${SSC_AWS_ACCESS_KEY} ${SSC_AWS_SECRET_KEY}" >> ${JOBSFILE}
+    echo "${HOMEDIR}/ssc-imputation/psmc/get_consensus_round2.sh ${bamfile} ${chrom} ${OUTBUCKET} ${outfile} ${REFFA} ${LAB_AWS_ACCESS_KEY} ${LAB_AWS_SECRET_KEY} ${SSC_AWS_ACCESS_KEY} ${SSC_AWS_SECRET_KEY} || exit 0" >> ${JOBSFILE}
 done
 
 # Run jobs
