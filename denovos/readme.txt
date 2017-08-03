@@ -1,7 +1,8 @@
-# TODO change ./test.sh runs denovofinder. change to run on all hipstr results
+./run_denovofinder.sh runs DenovoFinder on all chromosomes
+./get_locus_stats.sh gets stats for each locus
 
 ./process_families.sh puts denovofinder res per family into tab format with fields for filtering. Calls:
-  - ./process_denovo.sh mostly wrapper to call filter_denovos.py script
+  - ./process_denovo.sh mostly wrapper to get ready to call filter_denovos.py
   - ./filter_denovos.py applies filters
   - ./summarize_family.py summarizes family info
 

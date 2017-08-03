@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BATCHDIR=batches_round3
-BATCHSIZE=160
+BATCHDIR=batches_round6
+BATCHSIZE=150
 DONE=all_completed_jobs.txt
 
 # Get completed jobs

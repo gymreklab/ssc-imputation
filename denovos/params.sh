@@ -1,10 +1,15 @@
 DENOVOFINDER=/home/mgymrek/workspace/HipSTR-mgymrek/DenovoFinder
 FAMFILE=/home/mgymrek/workspace/ssc-imputation/denovos/pedigree.fam
+PARENTS=/home/mgymrek/workspace/ssc-imputation/metadata/ssc_parent_ids.txt
 WORKDIR=/home/mgymrek/workspace/ssc-imputation/denovos
 TMPDIR=/storage/mgymrek/ssc-denovos/test/tmp
-OUTDIR=/storage/mgymrek/ssc-denovos/test/ # TODO change
-startchrom=12 # TODO change
-endchrom=12 # TODO change
+BASEOUTDIR=/storage/mgymrek/ssc-denovos/denovos/
+startchrom=21 # TODO change
+endchrom=21 # TODO change
+
+# Denovofinder options
+WINDOWSIZE=50000
+MAXALLELES=25
 
 # Filtering options for individual genotypes 
 MINQ=0.9 # Minimum genotype quality score for all family members

@@ -13,7 +13,7 @@ do
     for chrom in $(seq $startchrom $endchrom)
     do
 	echo "[process_families.sh] Running process_denovo.sh..."
-#	./process_denovo.sh ${chrom} ${family} ${father} ${mother} ${affected} ${unaffected}
+	./process_denovo.sh ${chrom} ${family} ${father} ${mother} ${affected} ${unaffected}
 	echo "[process_families.sh] Running filter_denovos.py..."
 	./filter_denovos.py \
 	    --infile ${OUTDIR}/bychrom/SSC_denovo_${family}_${chrom}.tab \
