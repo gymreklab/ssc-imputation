@@ -1,6 +1,12 @@
 # Call denovos using nuclear families
 ./run_denovofinder_trio.sh
 
+# Get denovofinder results per family into tab format with fields for filtering
+./process_families_trio.sh
+
+# Filter loci
+./filter_families_trio.sh
+
 ####### Old #######
 ./run_denovofinder.sh runs DenovoFinder on all chromosomes
 ./get_locus_stats.sh gets stats for each locus
