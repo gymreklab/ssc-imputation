@@ -11,12 +11,12 @@ endchrom=21 # TODO change
 WINDOWSIZE=500000
 MAXALLELES=25
 
-# Filtering options for individual genotypes 
-MINQ=0.9 # Minimum genotype quality score for all family members
-MINST=1.0 # Filter if %sttuter/indel reads > this
-MINSPAN=10 # Require at least this many spanning reads
-MINSUPP=0.15 # Each allele must be supported by this percent of reads
-PARCOUNT=1000 # If parent has > this many reads supporing new allele, filter
+# Filtering options for individual genotypes  - TODO set
+MINQ=0.0 # Minimum genotype quality score for all family members
+MINST=1.0 # Filter if %stuter/indel reads > this
+MINSPAN=0 # Require at least this many spanning reads
+MINSUPP=0.0 # Each allele must be supported by this percent of reads
+PARCOUNT=10000 # If parent has > this many reads supporing new allele, filter
 
 # Summary filter levels
 PROBTHRESH=0.9 # require max posterior prob to be at least this

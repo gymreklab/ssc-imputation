@@ -8,7 +8,8 @@ source params.sh
 for family in $(cat ${FAMFILE} | cut -f 1 -d' '| sort | uniq)
 do
     famfile=${BASEOUTDIR}/byfamily/SSC_denovo_${family}.tab
-    echo ./filter_denovos_trio.py \
+    echo ${famfile}
+    ./filter_denovos_trio.py \
 	--infile ${famfile} \
 	--outfile ${famfile}.filtered \
 	--minq-child ${MINQ} --minq-father ${MINQ} --minq-mother ${MINQ} \

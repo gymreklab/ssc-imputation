@@ -7,6 +7,12 @@
 # Filter loci
 ./filter_families_trio.sh
 
+# Summarize family info
+./summarize_family_trio.sh
+
+# Combine per-locus - TODO
+./summarize_loci_trio.sh
+
 ####### Old #######
 ./run_denovofinder.sh runs DenovoFinder on all chromosomes
 ./get_locus_stats.sh gets stats for each locus
