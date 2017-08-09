@@ -8,7 +8,7 @@ startchrom=21 # TODO change
 endchrom=21 # TODO change
 
 # Denovofinder options
-WINDOWSIZE=50000
+WINDOWSIZE=500000
 MAXALLELES=25
 
 # Filtering options for individual genotypes 
