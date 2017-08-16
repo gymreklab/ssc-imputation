@@ -10,7 +10,7 @@
 # Summarize family info
 ./summarize_family_trio.sh
 
-# Combine per-locus - TODO
+# Combine per-locus
 ./summarize_loci_trio.sh
 
 ####### Old #######

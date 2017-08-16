@@ -1,15 +1,12 @@
 #!/bin/bash
 
-set -e -o pipefail
-
 source params.sh
 
 # For each family
 for family in $(cat ${FAMFILE} | cut -f 1 -d' '| sort | uniq)
 do
     famfile=${BASEOUTDIR}/byfamily/SSC_denovo_${family}.tab
-    echo ${famfile}
-    ./filter_denovos_trio.py \
+    echo ./filter_denovos_trio.py \
 	--infile ${famfile} \
 	--outfile ${famfile}.filtered \
 	--minq-child ${MINQ} --minq-father ${MINQ} --minq-mother ${MINQ} \
@@ -18,4 +15,4 @@ do
 	--min-percsupp-child ${MINSUPP} --min-percsupp-father ${MINSUPP} --min-percsupp-mother ${MINSUPP} \
 	--parent-allele-count ${PARCOUNT} \
 	--unit
-done
+done | xargs -P 4 -I% -n1 sh -c "%"
