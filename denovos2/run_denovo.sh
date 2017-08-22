@@ -1,8 +1,6 @@
 #!/bin/bash
 
-startchrom=19
-endchrom=22
-OUTDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls
+source params.sh
 
 for chrom in $(seq ${startchrom} ${endchrom})
 do
@@ -14,6 +12,6 @@ do
 	--require-num-children 2 \
 	--min-coverage 10 \
 	--min-score 0.9 \
-	--posterior-threshold 0.9 \
+	--posterior-threshold ${PTHRESH} \
 	--out ${OUTDIR}/denovos_chr${chrom}
 done
