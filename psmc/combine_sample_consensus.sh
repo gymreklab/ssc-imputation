@@ -2,8 +2,9 @@
 
 #SBATCH -A ddp268
 #SBATCH -p shared
-#SBATCH -t 100
+#SBATCH -t 1000
 #SBATCH --get-user-env
+#SBATCH --mem=8G
 
 set -e -o pipefail
 
@@ -15,6 +16,6 @@ for chrom in $(seq 1 22)
 do
     zcat ${chrompath}/${sample}.final.bam.fq_${chrom}.gz
 done > ${samplepath}/${sample}.fq
-gzip ${samplepath}/${sample}.fq
+gzip -f ${samplepath}/${sample}.fq
 
 exit 0

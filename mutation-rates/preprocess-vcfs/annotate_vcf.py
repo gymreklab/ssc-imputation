@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+"""
+Prepare VCF files with TMRCA field for mutea analysis
+"""
 
+import argparse
 import os
 import sys
 import tabix
@@ -31,12 +35,12 @@ def GetTMRCAData(asdt, chrom, start, end):
     return tmrcas
 
 def main():
-    try:
-        invcf = sys.argv[1]
-        asdt = sys.argv[2]
-    except:
-        sys.stderr.write("Usage: ./annotate_vcf.py VCFFILE ASDTFILE > NEWVCF\n")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(__doc__)
+    parser.add_argument("--invcf", help="HipSTR or lobSTR VCF input file", required=True, type=str)
+    parser.add_argument("--asdt", help="Bed files with chrom, start, end, sample, trmca", required=True, type=str)
+    args = parser.parse_args()
+    invcf = args.invcf
+    asdt = args.asdt
 
     asdt = tabix.open(asdt)
     reader = vcf.Reader(open(invcf, "rb"))
