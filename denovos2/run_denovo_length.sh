@@ -16,5 +16,6 @@ do
 	--min-supp-reads ${MINSUPPREADS} \
 	--posterior-threshold ${PTHRESH} \
 	--combine-alleles-by-length \
-	--out ${OUTDIR}/denovos_chr${chrom}_bylength > chr${chrom}.out 2>&1"
+        --output-all-loci \
+	--out ${OUTDIR}/denovos_chr${chrom}_bylength > ${LOGDIR}/chr${chrom}.out 2>&1"
 done | xargs -P22 -I% -n1 sh -c "%"

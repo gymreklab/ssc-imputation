@@ -1,7 +1,7 @@
 startchrom=1
 endchrom=22
 OUTDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls
-
+LOGDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/log
 # Filtering
 PTHRESH=0.9
 MAXALLELES=100

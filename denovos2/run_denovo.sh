@@ -15,5 +15,6 @@ do
 	--min-span-coverage ${MINSPANCOV} \
 	--min-supp-reads ${MINSUPPREADS} \
 	--posterior-threshold ${PTHRESH} \
-	--out ${OUTDIR}/denovos_chr${chrom}_byseq > chr${chrom}_seq.out 2>&1"
+        --output-all-loci \
+	--out ${OUTDIR}/denovos_chr${chrom}_byseq > ${LOGDIR}/chr${chrom}_seq.out 2>&1"
 done | xargs -P22 -I% -n1 sh -c "%"
