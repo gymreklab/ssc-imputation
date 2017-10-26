@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH -A ddp268
-#SBATCH -t 100
-#SBATCH --mem=5G
-#SBATCH -p shared
-#SBATCH --job-name=testmutea
-#SBATCH --get-user-env
-#SBATCH -o testmutea.out
-#SBATCH -e testmutea.err
-
-time ./run_mutea_autosomal.sh 2 18 "--maxloci 10"
+sbatch -A ddp268 \
+    -t 2000 \
+    --mem=5G \
+    -p shared \
+    --job-name=testmutea \
+    --get-user-env \
+    -o testmutea_%a.out \
+    -e testmutea_%a.err \
+    --array=18,26,200 \
+    ./run_mutea_autosomal.sh 2
