@@ -14,7 +14,7 @@ source params.sh
 python ${MUTEADIR}/mutea-auto/main_autosomal.py \
     --asdhet ${ASDT_VCF} --vcf --asdhetdir \
     --out ${OUTDIR}/test/ssc_hipstr_mutea_codis.tab \
-    --use-likelihoods \
+    --use-likelihoods --output-central-allele \
     --loci ${CODIS} \
     --min_samples ${MINSAMPLES} \
     --min_mu ${MINMU} --max_mu ${MAXMU} \
