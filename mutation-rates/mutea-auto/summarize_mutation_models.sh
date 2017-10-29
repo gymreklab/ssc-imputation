@@ -40,4 +40,8 @@ do
 	awk '{print ($3-$2+1) "\t" $0}' | \
 	datamash mean 1 mean 5 mean 6 mean 7 | \
 	awk -v"period=$period" -v"slope=$slope" '{print period "\t" $2 "\t" slope "\t" $1 "\t" $3 "\t" $4}'
-done
+done > ../expected-rates/rate_model_params.tab
+
+# Get central alleles per locus
+zcat ${OUTDIR}/genome-wide/ssc_mutea_auto_unfiltered.bed.gz | cut -f 1-3,9 | bgzip -c > \
+    ../expected-rates/ssc_central_alleles.bed.gz
