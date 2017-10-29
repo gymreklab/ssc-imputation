@@ -7,7 +7,7 @@ STUTTERFILE=/oasis/projects/nsf/ddp268/mgymrek/ssc-quads/hipstr-call-info/ssc_hi
 TMPLOC=/tmp
 
 CODIS=/home/mgymrek/workspace/ssc-imputation/mutation-rates/mutea-auto/CODIS.bed
-BATCHSIZE=5000
+BATCHSIZE=1000
 
 MINSAMPLES=50
 MINMU=0.00000001
@@ -16,3 +16,4 @@ MINBETA=0.0
 MAXBETA=0.9
 MINPGEOM=0.7
 MAXPGEOM=1.0
+SCALE=2.57

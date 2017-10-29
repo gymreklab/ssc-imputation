@@ -19,7 +19,7 @@ xBATCH=$(printf "%05d" ${BATCH})
 python ${MUTEADIR}/mutea-auto/main_autosomal.py \
     --asdhet ${ASDT_VCF}/hipstr.chr${CHROM}.asdt.vcf.gz --vcf \
     --out ${OUTDIR}/batch_estimates/ssc_hipstr_mutea_chrom${CHROM}_batch${BATCH}.tab \
-    --usestutter ${OUTDIR}/stutterfiles/ssc_hipstr_stutter_chr${CHROM}_batch${xBATCH}.bed \
+    --use-likelihoods --output-central-allele \
     --loci ${OUTDIR}/batches/${CHROM}.${xBATCH} \
     --min_samples ${MINSAMPLES} \
     --min_mu ${MINMU} --max_mu ${MAXMU} \
