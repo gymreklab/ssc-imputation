@@ -9,10 +9,13 @@ do
     logmu=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $2}')
     slope=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $3}')
     meanlen=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $4}')
+    meanbeta=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $5}')
+    meanp=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $6}')
     cat ${HIPREF} | awk -v"period=$period" '($4==period)' | \
-	awk -v"logmu=$logmu" -v "slope=$slope" -v "meanlen=$meanlen" \
-	'{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($3-$2+1-meanlen)*slope+logmu}' | \
-	awk -v"maxval=$MAXVAL" '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($5>maxval?maxval:$5)}'
+	awk -v"logmu=$logmu" -v "slope=$slope" -v "meanlen=$meanlen" -v "meanbeta=$meanbeta" -v "meanp=$meanp" \
+	'{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($3-$2+1-meanlen)*slope+logmu "\t" meanbeta "\t" meanp}' | \
+	awk -v"maxval=$MAXVAL" '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($5>maxval?maxval:$5) "\t" $6 "\t" $7}'
 done > ${tmpdir}/mutpred.bed
 
-sort -k1,1 -k2,2n ${tmpdir}/mutpred.bed > ${OUTDIR}/predicted_str_mutrates_GRCh37.bed
+# TODO central allele from mutea instead of 0 for last column
+sort -k1,1 -k2,2n ${tmpdir}/mutpred.bed | awk '{print $0 "\t" 0}' > ${OUTDIR}/predicted_str_mutrates_GRCh37.bed
