@@ -11,5 +11,10 @@
 # Gather batches
 ./gather_completed.sh
 
-# Summarize mutation models - TODO edit once finalized
+# Filter and scale
+./filter_and_scale.sh
+
+# Summarize mutation models
 ./summarize_mutation_models.sh
+
+###################

@@ -10,7 +10,7 @@ slope4=0.067
 slope5=0.06
 slope6=0.06
 
-echo "period,logmu,slope,meanlen,meanbeta,meanp" | sed 's/,/\t/g'
+echo "period,logmu,slope,meanlen,meanbeta,meanp" | sed 's/,/\t/g' > ../expected-rates/rate_model_params.tab
 # Get mean vals by period
 for period in $(seq 1 6)
 do
@@ -36,11 +36,11 @@ do
 	slope="NA"
     fi
     cat ${HIPREF} | awk -v"period=$period" '($4==period)' | \
-	intersectBed -a ${OUTDIR}/genome-wide/ssc_mutea_auto_unfiltered.bed.gz -b stdin | \
+	intersectBed -a ${OUTDIR}/genome-wide/ssc_mutea_auto_scaled.bed.gz -b stdin | \
 	awk '{print ($3-$2+1) "\t" $0}' | \
 	datamash mean 1 mean 5 mean 6 mean 7 | \
 	awk -v"period=$period" -v"slope=$slope" '{print period "\t" $2 "\t" slope "\t" $1 "\t" $3 "\t" $4}'
-done > ../expected-rates/rate_model_params.tab
+done >> ../expected-rates/rate_model_params.tab
 
 # Get central alleles per locus
 zcat ${OUTDIR}/genome-wide/ssc_mutea_auto_unfiltered.bed.gz | cut -f 1-3,9 | bgzip -c > \

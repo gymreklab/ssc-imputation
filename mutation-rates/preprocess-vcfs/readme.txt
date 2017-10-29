@@ -3,5 +3,5 @@
 sbatch ./get_str_tmrcas_preprocess.sh
 sbatch -A ddp268 -t 2800 --array=1-22 --job-name=getstrtmrca --get-user-env ./get_str_tmrcas.sh
 
-# Add TMRCA field to each VCF - TODO annotate_vcf.py
+# Add TMRCA field to each VCF
 sbatch -A ddp268 -t 2800 --array=1-22 --job-name=annotatevcfs --get-user-env ./annotate_vcfs.sh
