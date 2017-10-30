@@ -34,7 +34,9 @@ cat ${FILTERDIR}/locus_filter*.bed | sort -k1,1 -k2,2n | uniq > \
 rm -f ${FILTERDIR}/family_filter*.txt
 
 # This family had way too many denovos called in the affected child
-echo "11299" > ${FILTERDIR}/family_filters_outlier.txt
+# Use sample IDs instead of family IDs, which are just numbers
+echo "SSC02229" > ${FILTERDIR}/family_filters_outlier.txt
+echo "SSC02241" >> ${FILTERDIR}/family_filters_outlier.txt
 
 # Combine all family filters
 cat ${FILTERDIR}/*.txt | sort | uniq > ${FILTERDIR}/denovo_family_filters.txt

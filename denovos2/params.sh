@@ -1,6 +1,7 @@
 startchrom=1
 endchrom=22
 OUTDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls
+FINALOUTDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls_filtered
 LOGDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/log
 FILTERDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/filters
 ANNDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/annotations
