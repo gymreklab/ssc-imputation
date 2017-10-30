@@ -23,10 +23,15 @@ zcat ${FINALOUTDIR}/denovos_bylength.all_mutations_filtered.tab.gz | grep -v chr
     cut -f 1,2 | uniq > ${FINALOUTDIR}/denovos_by_length_loci.bed
 
 #################### Update summary files ###########################
+# TODO remove calls if mutation in both kids
 ./summarize_loci.py \
     --allmutations ${FINALOUTDIR}/denovos_bylength.all_mutations_filtered.tab.gz \
     --loci ${FINALOUTDIR}/denovos_by_length_loci.bed \
     --annotations ${ANNDIR}/denovo_annotations.bed \
-    --out ${FINALOUTDIR}/denovos_bylength.locus_summary.bed
+    --out ${FINALOUTDIR}/denovos_bylength.locus_summary.bed \
+    --output-mutations ${FINALOUTDIR}/denovos_bylength.all_mutations_pass.tab \
+    --filter-both-kids \
+    --max-filtered-families ${MAXFILTFAM} \
+    --pthresh ${PTHRESH}
 bgzip -f ${FINALOUTDIR}/denovos_bylength.locus_summary.bed
 tabix -p bed -f ${FINALOUTDIR}/denovos_bylength.locus_summary.bed.gz

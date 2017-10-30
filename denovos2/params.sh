@@ -21,3 +21,4 @@ EXAC=/storage/mgymrek/ssc-denovos/denovos2/other-data/fordist_cleaned_exac_nonTC
 
 # Annotation and filtering parameters
 MINCHILDREN=50; MINCHILDRENCOL=15
+MAXFILTFAM=5
