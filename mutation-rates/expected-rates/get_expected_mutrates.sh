@@ -3,6 +3,7 @@
 source params.sh
 
 tmpdir=$(mktemp -d)
+echo $tmpdir
 
 for period in $(seq 1 6)
 do
@@ -17,5 +18,6 @@ do
 	awk -v"maxval=$MAXVAL" '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($5>maxval?maxval:$5) "\t" $6 "\t" $7}'
 done > ${tmpdir}/mutpred.bed
 
-# TODO central allele from mutea instead of 0 for last column
-sort -k1,1 -k2,2n ${tmpdir}/mutpred.bed | awk '{print $0 "\t" 0}' > ${OUTDIR}/predicted_str_mutrates_GRCh37.bed
+sort -k1,1 -k2,2n ${tmpdir}/mutpred.bed | \
+    intersectBed -a stdin -b ssc_central_alleles.bed.gz -sorted -wa -wb -loj | sed 's/\.$/0/' | \
+    cut -f 1-7,11 > ${OUTDIR}/predicted_str_mutrates_GRCh37.bed
