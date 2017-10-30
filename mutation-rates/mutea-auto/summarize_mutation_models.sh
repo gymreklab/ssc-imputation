@@ -37,6 +37,7 @@ do
     fi
     cat ${HIPREF} | awk -v"period=$period" '($4==period)' | \
 	intersectBed -a ${OUTDIR}/genome-wide/ssc_mutea_auto_scaled.bed.gz -b stdin | \
+	awk '($7>0)' | \
 	awk '{print ($3-$2+1) "\t" $0}' | \
 	datamash mean 1 mean 5 mean 6 mean 7 | \
 	awk -v"period=$period" -v"slope=$slope" '{print period "\t" $2 "\t" slope "\t" $1 "\t" $3 "\t" $4}'
