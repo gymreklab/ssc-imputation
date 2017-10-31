@@ -4,6 +4,7 @@
 # Get filters and annotations
 ./filter_and_annotate.sh
 ./apply_filters.sh
+./summarize_loci.sh
 
 ##### TODO change below to use filtered files
 # Summarize families

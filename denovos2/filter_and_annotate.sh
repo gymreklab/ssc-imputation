@@ -15,14 +15,6 @@ cat ${OUTDIR}/denovos_chr*_bylength.locus_summary.tab | \
     sort -k1,1 -k2,2n | uniq > \
     ${FILTERDIR}/locus_filter_segdup.bed
 
-# Too few families called
-cat ${OUTDIR}/denovos_chr*_bylength.locus_summary.tab | \
-    grep -v chrom | \
-    awk -v"minchildren=$MINCHILDREN" -v"minchildrencol=$MINCHILDRENCOL" \
-    '($minchildrencol<minchildren)' | cut -f 1-3 | \
-    sort -k1,1 -k2,2n | uniq > \
-    ${FILTERDIR}/locus_filter_minfamilies.bed
-
 # Combine all loci filters
 cat ${FILTERDIR}/locus_filter*.bed | sort -k1,1 -k2,2n | uniq > \
     ${FILTERDIR}/denovo_locus_filters.bed
@@ -40,9 +32,6 @@ echo "SSC02241" >> ${FILTERDIR}/family_filters_outlier.txt
 
 # Combine all family filters
 cat ${FILTERDIR}/*.txt | sort | uniq > ${FILTERDIR}/denovo_family_filters.txt
-
-########################################
-# Which calls to remove - TODO
 
 ########################################
 # Annotations:

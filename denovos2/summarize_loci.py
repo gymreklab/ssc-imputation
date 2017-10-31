@@ -17,7 +17,7 @@ def ERROR(msg):
     MSG(msg)
     sys.exit(1)
 
-def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_families):
+def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_families, min_children):
     # Apply filters first
     if filter_both_kids:
         mutfam = df[(df["posterior"]>=pthresh)].groupby("family", as_index=False).agg({"child": len})
@@ -29,6 +29,7 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
             MSG("Removing families %s for locus %s:%s"%(",".join(map(str, filterfam)), df["chrom"].values[0], df["pos"].values[0]))
             df = df[df["family"].apply(lambda x: x not in filterfam)]
     if df.shape[0] == 0: return None
+    if df[(df["phenotype"]==1)].shape[0] < min_children: return None
     period = df["period"].values[0]
     total_children = df.shape[0]
     total_mutations = df[(df["posterior"]>=pthresh)].shape[0]
@@ -85,7 +86,8 @@ def main():
     parser.add_argument("--out", help="Name of output bed file or stdout", type=str, required=True)
     parser.add_argument("--output-mutations", help="Name of output file for mutations passing filters and thresholds", type=str, required=True)
     parser.add_argument("--filter-both-kids", help="Filter families if a locus was called denovo in both kids", action="store_true")
-    parser.add_argument("--max-filtered-families", help="Skip locus if at least this many families are filtered", type=int, default=0)
+    parser.add_argument("--max-filtered-families", help="Skip locus if at least this many families are filtered", type=int, default=10000)
+    parser.add_argument("--min-children", help="Remove loci if less than this many total unaffected children analyzed", type=int, defeault=0)
     parser.add_argument("--pthresh", help="Posterior threshold to call something a mutation", type=float, required=True)
     args = parser.parse_args()
 
@@ -122,7 +124,7 @@ def main():
                "p-value", "children_with_mutations"] + anncols
     outf.write("\t".join(outcols)+"\n")
 
-    outmcols = ["chrom","pos", "period", "prior", "family", "child", "phenotype", "posterior", "newallele", "mutsize", "inparents", "poocase"]
+    outmcols = ["#chrom","pos", "period", "prior", "family", "child", "phenotype", "posterior", "newallele", "mutsize", "inparents", "poocase"]
     outm.write("\t".join(outmcols)+"\n")
     if args.output_mutations != "stdout":
         outm.close()
@@ -141,12 +143,14 @@ def main():
             for col in anncols: anndata.append(loc_ann[col].values[0])
             end = loc_ann["end"].values[0]
         loc_denovo = ReadDenovoData(args.allmutations, chrom, start)
-        denovodata = ProcessLocus(loc_denovo, args.pthresh, outm, outmcols, args.filter_both_kids, args.max_filtered_families)
+        denovodata = ProcessLocus(loc_denovo, args.pthresh, outm, outmcols, args.filter_both_kids,
+                                  args.max_filtered_families, args.min_children)
         if denovodata is None:
             MSG("Skipping locus %s:%s, no data after filtering or too many families failed filter."%(chrom, start))
             continue
         outdata = [chrom, start, end] + denovodata + anndata
         outf.write("\t".join(map(str, outdata))+"\n")
+        outf.flush()
 
     outf.close()
     outm.close()

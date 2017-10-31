@@ -20,5 +20,5 @@ CODING=/storage/resources/dbase/human/hg19/hg19_codingexons.bed
 EXAC=/storage/mgymrek/ssc-denovos/denovos2/other-data/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt
 
 # Annotation and filtering parameters
-MINCHILDREN=50; MINCHILDRENCOL=15
+MINCHILDREN=50
 MAXFILTFAM=5
