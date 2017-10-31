@@ -6,9 +6,6 @@
 ./apply_filters.sh
 ./summarize_loci.sh
 
-##### TODO change below to use filtered files
 # Summarize families
 ./run_summarize_families2.sh
 
-# Get all mutations
-./get_mutations.sh
