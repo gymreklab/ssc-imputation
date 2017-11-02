@@ -10,6 +10,8 @@ slope4=0.067
 slope5=0.06
 slope6=0.06
 
+FORCEBETA=0.2
+
 echo "period,logmu,slope,meanlen,meanbeta,meanp" | sed 's/,/\t/g' > ../expected-rates/rate_model_params.tab
 # Get mean vals by period
 for period in $(seq 1 6)
@@ -40,7 +42,7 @@ do
 	awk '($7>0)' | \
 	awk '{print ($3-$2+1) "\t" $0}' | \
 	datamash mean 1 mean 5 mean 6 mean 7 | \
-	awk -v"period=$period" -v"slope=$slope" '{print period "\t" $2 "\t" slope "\t" $1 "\t" $3 "\t" $4}'
+	awk -v "beta=$FORCEBETA" -v"period=$period" -v"slope=$slope" '{print period "\t" $2 "\t" slope "\t" $1 "\t" beta "\t" $4}'
 done >> ../expected-rates/rate_model_params.tab
 
 # Get central alleles per locus
