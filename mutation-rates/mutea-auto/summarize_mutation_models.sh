@@ -10,7 +10,7 @@ slope4=0.067
 slope5=0.06
 slope6=0.06
 
-FORCEBETA=0.2
+FORCEBETA=0.1
 
 echo "period,logmu,slope,meanlen,meanbeta,meanp" | sed 's/,/\t/g' > ../expected-rates/rate_model_params.tab
 # Get mean vals by period
