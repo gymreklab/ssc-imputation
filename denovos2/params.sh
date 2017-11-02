@@ -20,6 +20,7 @@ CODING=/storage/resources/dbase/human/hg19/hg19_codingexons.bed
 EXAC=/storage/mgymrek/ssc-denovos/denovos2/other-data/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt
 GENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/hg19_refseq_genes.bed
 CONSTRAINT=/storage/mgymrek/ssc-denovos/mutea-results/ssc_autosomal_perlocus_constraint.bed
+HIPPROP=/storage/mgymrek/ssc-denovos/denovos2/other-data/GRCh37.hipstr_reference_sorted_properties.tab.gz
 
 # Annotation and filtering parameters
 MINCHILDREN=50

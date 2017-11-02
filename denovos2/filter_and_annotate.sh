@@ -80,6 +80,13 @@ cat ${CONSTRAINT} | grep -v chrom | awk '{print $1 "\t" $2 "\t" $3 "\t" $(NF-1)}
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_strconsDIFF.txt    
 
+# Motif
+zcat ${HIPPROP} | grep -v chrom | cut -f 1-4 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_motif.txt
+
 # Combine annotations
 tmpdir=$(mktemp -d)
 cp ${ANNDIR}/all_loci.bed ${tmpdir}/all_loci.bed
