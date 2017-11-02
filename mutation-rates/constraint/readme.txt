@@ -1,5 +1,5 @@
 # Get genome-wide file with features + observed rates
-./get_features.sh # TODO
+./get_features.sh
 ./combine_features_estimates.sh # TODO
 
 # Get set of loci to train on
