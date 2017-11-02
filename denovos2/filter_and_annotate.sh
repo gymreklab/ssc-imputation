@@ -68,7 +68,17 @@ cat ${CODING} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
     ${ANNDIR}/annotations_coding.txt
 
-# STR constraint scores - TODO
+# STR constraint scores
+cat ${CONSTRAINT} | grep -v chrom | awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_strconsZ.txt    
+cat ${CONSTRAINT} | grep -v chrom | awk '{print $1 "\t" $2 "\t" $3 "\t" $(NF-1)}' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_strconsDIFF.txt    
 
 # Combine annotations
 tmpdir=$(mktemp -d)

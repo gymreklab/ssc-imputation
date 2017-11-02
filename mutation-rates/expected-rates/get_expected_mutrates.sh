@@ -13,8 +13,9 @@ do
     meanbeta=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $5}')
     meanp=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $6}')
     cat ${HIPREF} | awk -v"period=$period" '($4==period)' | \
+	intersectBed -a stdin -b hipstr_unint_len.bed.gz -wa -wb | \
 	awk -v"logmu=$logmu" -v "slope=$slope" -v "meanlen=$meanlen" -v "meanbeta=$meanbeta" -v "meanp=$meanp" \
-	'{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($3-$2+1-meanlen)*slope+logmu "\t" meanbeta "\t" meanp}' | \
+	'{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($NF)*slope+logmu "\t" meanbeta "\t" meanp}' | \
 	awk -v"maxval=$MAXVAL" '{print $1 "\t" $2 "\t" $3 "\t" $4 "\t" ($5>maxval?maxval:$5) "\t" $6 "\t" $7}'
 done > ${tmpdir}/mutpred.bed
 
