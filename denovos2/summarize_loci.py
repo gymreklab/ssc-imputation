@@ -10,10 +10,6 @@ import scipy.stats
 import sys
 import tabix
 
-# For profiling
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput, GephiOutput
-
 def MSG(msg):
     sys.stderr.write(msg.strip() + "\n")
 
@@ -44,16 +40,25 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
     total_mutation_rate = total_mutations*1.0/total_children
     affected_children = df[(df["phenotype"]==2)].shape[0]
     affected_mutations = df[(df["phenotype"]==2) & (df["posterior"]>=pthresh)].shape[0]
+    affected_new_mutations = df[(df["phenotype"]==2) & (df["posterior"]>=pthresh) & df["isnew"]].shape[0]
     affected_mutation_rate = affected_mutations*1.0/affected_children
     unaffected_children = df[(df["phenotype"]==1)].shape[0]
     unaffected_mutations = df[(df["phenotype"]==1) & (df["posterior"]>=pthresh)].shape[0]
+    unaffected_new_mutations = df[(df["phenotype"]==1) & (df["posterior"]>=pthresh) & df["isnew"]].shape[0]
     unaffected_mutation_rate = unaffected_mutations*1.0/unaffected_children
     n11 = affected_mutations
     n12 = affected_children - affected_mutations
     n21 = unaffected_mutations
     n22 = unaffected_children - unaffected_mutations
     pvalue = scipy.stats.fisher_exact([[n11,n12],[n21, n22]], alternative="greater")[1]
-    children_with_mutations = ",".join(list(df[(df["posterior"]>=pthresh)].apply(lambda x: x["family"]+":"+x["child"], 1).values))
+    n11n = affected_new_mutations
+    n12n = affected_children - affected_new_mutations
+    n21n = unaffected_new_mutations
+    n22n = unaffected_children - unaffected_new_mutations
+    pvalue_new = scipy.stats.fisher_exact([[n11n,n12n],[n21n,n22n]], alternative="greater")[1]
+    children_with_mutations = ",".join(list(df[(df["posterior"]>=pthresh)].apply(lambda x: x["family"]+":"+str(x["phenotype"])+":"+ \
+                                                                                 x["newallele"]+":"+ \
+                                                                                 x["ctrl_count"]+","+x["case_count"]+","+x["unk_count"], 1).values))
     # Output mutations
     df[(df["posterior"]>=pthresh)][["chrom"]+outmcols[1:]].to_csv(outm, header=False, index=False, sep="\t")
     outm.flush()
@@ -61,14 +66,13 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
     # Return summary line
     return [period, \
         total_children, total_mutations, total_mutation_rate, \
-        affected_children, affected_mutations, affected_mutation_rate, \
-        unaffected_children, unaffected_mutations, unaffected_mutation_rate, \
-        pvalue, children_with_mutations]
+        affected_children, affected_mutations, affected_new_mutations, affected_mutation_rate, \
+        unaffected_children, unaffected_mutations, unaffected_new_mutations, unaffected_mutation_rate, \
+        pvalue, pvalue_new, children_with_mutations]
         
 
-def ReadDenovoData(allmutations, chrom, start):
+def ReadDenovoData(allmutations, chrom, start, keys):
     data = {}
-    keys = ["chrom","pos","period","prior","family","child","phenotype","posterior","newallele","mutsize","inparents","poocase"]
     for k in keys: data[k] = []
     x = tabix.open(allmutations)
     try:
@@ -87,6 +91,7 @@ def ReadDenovoData(allmutations, chrom, start):
     df["prior"] = df["prior"].apply(float)
     df["phenotype"] = df["phenotype"].apply(int)
     df["posterior"] = df["posterior"].apply(float)
+    df["isnew"] = df["isnew"].apply(lambda x: x=="1")
     return df
 
 def main():
@@ -101,7 +106,6 @@ def main():
     parser.add_argument("--min-children", help="Remove loci if less than this many total unaffected children analyzed", type=int, default=0)
     parser.add_argument("--pthresh", help="Posterior threshold to call something a mutation", type=float, required=True)
     parser.add_argument("--chrom", help="Only look at loci on this chromosome", type=str, default=None)
-    parser.add_argument("--profile", help="Profile a couple loci with pygraphviz", action="store_true")
     args = parser.parse_args()
 
     # Check input
@@ -126,26 +130,24 @@ def main():
     # Get output ready
     if args.out == "stdout":
         outf = sys.stdout
-    elif args.profile:
-        outf = open(os.devnull, "w")
     else:
         outf = open(args.out, "w")
     if args.output_mutations == "stdout":
         outm = sys.stdout
-    elif args.profile:
-        outm = open(os.devnull, "w")
     else:
         outm = open(args.output_mutations, "w")
 
-    outcols = ["#chrom", "start", "end", "period", \
+    outcols = ["chrom", "start", "end", "period", \
                "total_children", "total_mutations", "total_mutation_rate", \
-               "affected_children", "affected_mutations", "affected_mutation_rate", \
-               "unaffected_children", "unaffected_mutations", "unaffected_mutation_rate", \
-               "p-value", "children_with_mutations"] + anncols
-    outf.write("\t".join(outcols)+"\n")
+               "affected_children", "affected_mutations", "affected_new_mutations", "affected_mutation_rate", \
+               "unaffected_children", "unaffected_mutations", "unaffected_new_mutations", "unaffected_mutation_rate", \
+               "p-value", "p-value-new", "children_with_mutations"] + anncols
+    outf.write("#" + "\t".join(outcols)+"\n")
 
-    outmcols = ["#chrom","pos", "period", "prior", "family", "child", "phenotype", "posterior", "newallele", "mutsize", "inparents", "poocase"]
-    outm.write("\t".join(outmcols)+"\n")
+    outmcols = ["chrom","pos", "period", "prior", "family", "child", "phenotype", "posterior", \
+                "newallele", "mutsize", "inparents", "poocase", \
+                "isnew", "case_count", "ctrl_count", "unk_count"]
+    outm.write("#" + "\t".join(outmcols)+"\n")
     if args.output_mutations != "stdout":
         outm.close()
         outm = open(args.output_mutations, "a") # so pandas can append to it
@@ -165,7 +167,7 @@ def main():
             anndata = []
             for col in anncols: anndata.append(loc_ann[col].values[0])
             end = loc_ann["end"].values[0]
-        loc_denovo = ReadDenovoData(args.allmutations, chrom, start)
+        loc_denovo = ReadDenovoData(args.allmutations, chrom, start, outmcols)
         denovodata = ProcessLocus(loc_denovo, args.pthresh, outm, outmcols, args.filter_both_kids,
                                   args.max_filtered_families, args.min_children)
         if denovodata is None:

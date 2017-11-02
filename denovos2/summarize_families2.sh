@@ -49,4 +49,3 @@ do
 	datamash -g 5,6,7 count 5 sum 4 sum 8 | awk -v"pthresh=${pthresh}" '{print $0 "\t" pthresh}' \
 	>> ${DIR}/denovos_bylength_bychild2_period${PERIOD}.tab
 done 
-

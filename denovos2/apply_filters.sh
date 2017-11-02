@@ -2,7 +2,7 @@
 
 source params.sh
 
-# TODO: how to handle posterior=nan?
+# Update: shouldn't have any nans now
 
 #################### Apply filters to mutation files################
 echo "#"$(head -n 1 ${OUTDIR}/denovos_chr1_bylength.all_mutations.tab) | sed 's/ /\t/g'  > ${FINALOUTDIR}/denovos_bylength.all_mutations_filtered.tab
