@@ -1,5 +1,6 @@
 ASDT_VCF=/oasis/scratch/comet/mgymrek/temp_project/asdt_vcfs
 OUTDIR=/oasis/projects/nsf/ddp268/mgymrek/ssc-quads/mutea-autosomal/
+CONSTRAINTDIR=/oasis/projects/nsf/ddp268/mgymrek/ssc-quads/constraint/
 LOGDIR=/oasis/projects/nsf/ddp268/mgymrek/ssc-quads/mutea-autosomal/log/
 MUTEADIR=/home/mgymrek/workspace/mutea-autosomal
 HIPREF=/oasis/projects/nsf/ddp268/mgymrek/dbase/GRCh37.hipstr_reference_sorted.bed
