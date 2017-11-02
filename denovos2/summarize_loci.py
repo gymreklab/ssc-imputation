@@ -10,6 +10,10 @@ import scipy.stats
 import sys
 import tabix
 
+# For profiling
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput, GephiOutput
+
 def MSG(msg):
     sys.stderr.write(msg.strip() + "\n")
 
@@ -28,8 +32,12 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
         if len(filterfam) > 0:
             MSG("Removing families %s for locus %s:%s"%(",".join(map(str, filterfam)), df["chrom"].values[0], df["pos"].values[0]))
             df = df[df["family"].apply(lambda x: x not in filterfam)]
-    if df.shape[0] == 0: return None
-    if df[(df["phenotype"]==1)].shape[0] < min_children: return None
+    if df.shape[0] == 0:
+        MSG("No children found")
+        return None
+    if df[(df["phenotype"]==1)].shape[0] < min_children:
+        MSG("Not enough children for locus %s:%s - %s"%(df["chrom"].values[0], df["pos"].values[0], df.shape[0]))
+        return None
     period = df["period"].values[0]
     total_children = df.shape[0]
     total_mutations = df[(df["posterior"]>=pthresh)].shape[0]
@@ -47,7 +55,9 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
     pvalue = scipy.stats.fisher_exact([[n11,n12],[n21, n22]], alternative="greater")[1]
     children_with_mutations = ",".join(list(df[(df["posterior"]>=pthresh)].apply(lambda x: x["family"]+":"+x["child"], 1).values))
     # Output mutations
-    df[(df["posterior"]>=pthresh)][outmcols].to_csv(outm, header=False, index=False, sep="\t")
+    df[(df["posterior"]>=pthresh)][["chrom"]+outmcols[1:]].to_csv(outm, header=False, index=False, sep="\t")
+    outm.flush()
+
     # Return summary line
     return [period, \
         total_children, total_mutations, total_mutation_rate, \
@@ -57,14 +67,15 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
         
 
 def ReadDenovoData(allmutations, chrom, start):
+    data = {}
+    keys = ["chrom","pos","period","prior","family","child","phenotype","posterior","newallele","mutsize","inparents","poocase"]
+    for k in keys: data[k] = []
     x = tabix.open(allmutations)
     try:
         records = list(x.query(str(chrom), start-1, start))
     except tabix.TabixError:
-        ERROR("No mutations found for %s:%s"%(chrom, start))
-    data = {}
-    keys = ["chrom","pos","period","prior","family","child","phenotype","posterior","newallele","mutsize","inparents","poocase"]
-    for k in keys: data[k] = []
+        MSG("No mutations found for %s:%s"%(chrom, start))
+        return pd.DataFrame(data)
     for r in records:
         if int(r[1]) != start: continue
         for i in range(len(keys)):
@@ -87,8 +98,10 @@ def main():
     parser.add_argument("--output-mutations", help="Name of output file for mutations passing filters and thresholds", type=str, required=True)
     parser.add_argument("--filter-both-kids", help="Filter families if a locus was called denovo in both kids", action="store_true")
     parser.add_argument("--max-filtered-families", help="Skip locus if at least this many families are filtered", type=int, default=10000)
-    parser.add_argument("--min-children", help="Remove loci if less than this many total unaffected children analyzed", type=int, defeault=0)
+    parser.add_argument("--min-children", help="Remove loci if less than this many total unaffected children analyzed", type=int, default=0)
     parser.add_argument("--pthresh", help="Posterior threshold to call something a mutation", type=float, required=True)
+    parser.add_argument("--chrom", help="Only look at loci on this chromosome", type=str, default=None)
+    parser.add_argument("--profile", help="Profile a couple loci with pygraphviz", action="store_true")
     args = parser.parse_args()
 
     # Check input
@@ -107,15 +120,22 @@ def main():
 
     # Load loci
     loci = pd.read_csv(args.loci, sep="\t", names=["chrom", "start"])
+    if args.chrom is not None:
+        loci = loci[loci["chrom"].apply(str) == args.chrom]
 
     # Get output ready
     if args.out == "stdout":
         outf = sys.stdout
+    elif args.profile:
+        outf = open(os.devnull, "w")
     else:
         outf = open(args.out, "w")
     if args.output_mutations == "stdout":
         outm = sys.stdout
-    else: outm = open(args.output_mutations, "w")
+    elif args.profile:
+        outm = open(os.devnull, "w")
+    else:
+        outm = open(args.output_mutations, "w")
 
     outcols = ["#chrom", "start", "end", "period", \
                "total_children", "total_mutations", "total_mutation_rate", \
@@ -129,15 +149,18 @@ def main():
     if args.output_mutations != "stdout":
         outm.close()
         outm = open(args.output_mutations, "a") # so pandas can append to it
+
     # Process each locus
     for i in range(loci.shape[0]):
         chrom = loci.chrom.values[i]
         start = loci.start.values[i]
         loc_ann = ann[(ann["chrom"]==chrom) & (ann["start"]==start)]
         if loc_ann.shape[0] == 0:
-            ERROR("No annotation data for %s:%s"%(chrom, start))
+            MSG("No annotation data for %s:%s"%(chrom, start))
+            continue
         elif loc_ann.shape[0] > 1:
-            ERROR("Multiple annotation lines for %s:%s"%(chrom, start))
+            MSG("Multiple annotation lines for %s:%s"%(chrom, start))
+            continue
         else:
             anndata = []
             for col in anncols: anndata.append(loc_ann[col].values[0])

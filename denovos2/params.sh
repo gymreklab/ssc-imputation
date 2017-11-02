@@ -7,7 +7,7 @@ FILTERDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/filters
 ANNDIR=/storage/mgymrek/ssc-denovos/denovos2/denovocalls/annotations
 
 # Params for STRDenovoTools
-PTHRESH=0.9
+PTHRESH=0.8
 MAXALLELES=100
 MINCOV=10
 MINSPANCOV=10
@@ -18,6 +18,7 @@ MINSUPPREADS=2
 SEGDUP=/storage/resources/dbase/human/hg19/hg19_segmentalduplications.bed
 CODING=/storage/resources/dbase/human/hg19/hg19_codingexons.bed
 EXAC=/storage/mgymrek/ssc-denovos/denovos2/other-data/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt
+GENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/hg19_refseq_genes.bed
 
 # Annotation and filtering parameters
 MINCHILDREN=50

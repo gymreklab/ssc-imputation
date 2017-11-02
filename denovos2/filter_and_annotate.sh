@@ -44,15 +44,17 @@ cat ${OUTDIR}/denovos_chr*_bylength.locus_summary.tab | \
     grep -v chrom | cut -f 1-3 | \
     sort -k1,1 -k2,2n | uniq > ${ANNDIR}/all_loci.bed
 
-# ExAC
-cat ${EXAC} | grep -v chr | awk '{print $3 "\t" $5 "\t" $6 "\t" $2}' | \
+# Gene annotations
+cat ${GENES} | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
     awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_gene.txt
+
+# ExAC
 cat ${EXAC} | grep -v chr | awk '{print $3 "\t" $5 "\t" $6 "\t" $18}' | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
-    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' |  \
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_ExACmisZ.txt
 cat ${EXAC} | grep -v chr | awk '{print $3 "\t" $5 "\t" $6 "\t" $20}' | \

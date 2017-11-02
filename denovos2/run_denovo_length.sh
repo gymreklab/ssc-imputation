@@ -15,7 +15,7 @@ do
 	--min-span-coverage ${MINSPANCOV} \
 	--min-supp-reads ${MINSUPPREADS} \
 	--posterior-threshold ${PTHRESH} \
-	--combine-alleles-by-length \
+	--combine-alleles-by-length --round-alleles --include-invariant \
         --output-all-loci \
         --mutation-models /storage/mgymrek/ssc-denovos/mutea-results/predicted_str_mutrates_GRCh37.bed \
 	--out ${OUTDIR}/denovos_chr${chrom}_bylength > ${LOGDIR}/chr${chrom}.out 2>&1"
