@@ -2,3 +2,6 @@
 
 # Upload batches
 ./upload_batches_aws.sh
+
+# Run
+./run_aws.sh
