@@ -42,3 +42,5 @@ aws s3 cp ${outdir}/${outfile}.gz s3://ssc-mutea/batch_estimates/${outfile}.gz
 rm ${strvcf}
 rm ${batchpath}
 rm ${outdir}/${outfile}.gz
+
+exit 0

@@ -119,11 +119,13 @@ sudo mkdir -p /mnt/batch_estimates || die "Could not make output directory"
 sudo mkdir -p /mnt/batches/
 
 # Run each job
+source ${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/params.sh
 for batch in $(cat /mnt/tmp/superbatch.txt)
 do
-    ${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/mutea_aws.sh \
+    # Download files from S3
+    sudo ${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/mutea_aws.sh \
 	${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/params.sh \
-	${batch}
+	${batch} || die "Failed on batch ${batch}"
 done
 
 terminate
