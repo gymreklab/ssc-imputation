@@ -39,7 +39,7 @@ terminate() {
     sudo aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${superbatch}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-#   sudo aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} #TODO uncomment
+    sudo aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID}
     exit 1 # shouldn't happen
 }
 
