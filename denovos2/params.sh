@@ -16,11 +16,18 @@ MINSUPPREADS=2
 
 # Annotation and filtering files
 SEGDUP=/storage/resources/dbase/human/hg19/hg19_segmentalduplications.bed
-CODING=/storage/resources/dbase/human/hg19/hg19_codingexons.bed
+CODING=/storage/mgymrek/gtex/annotations/coding.bed
+UTR3=/storage/mgymrek/gtex/annotations/3utr.bed
+UTR5=/storage/mgymrek/gtex/annotations/5utr.bed
+PROMOTER1KB=/storage/mgymrek/gtex/annotations/hg19_promoter_1kb.bed
+PROMOTER3KB=/storage/mgymrek/gtex/annotations/hg19_promoter_3kb.bed
+PROMOTER5KB=/storage/mgymrek/gtex/annotations/hg19_promoter_5kb.bed
 EXAC=/storage/mgymrek/ssc-denovos/denovos2/other-data/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt
 GENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/hg19_refseq_genes.bed
 CONSTRAINT=/storage/mgymrek/ssc-denovos/mutea-results/ssc_autosomal_perlocus_constraint.bed
 HIPPROP=/storage/mgymrek/ssc-denovos/denovos2/other-data/GRCh37.hipstr_reference_sorted_properties.tab.gz
+ASDGENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/SFARI-Gene_genes_export13-11-2017.csv
+RNABP=/storage/mgymrek/gtex/causality/features/hipstr_rnabp_hg19_total.bed
 
 # Annotation and filtering parameters
 MINCHILDREN=50
