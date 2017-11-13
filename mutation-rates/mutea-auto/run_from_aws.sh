@@ -10,7 +10,7 @@ AWS_DIR=${HOMEDIR}/.aws
 AWS_CONFIG_FILE=${AWS_DIR}/config
 AWS_CRED_FILE=${AWS_DIR}/credentials
 
-OUTBUCKET=s3://ssc-mutea/batch_estimates/
+OUTBUCKET=s3://ssc-mutea/batch_estimates
 
 superbatch=$(basename $SUPERBATCHPATH)
 
@@ -36,10 +36,10 @@ Does the following:
 terminate() {
     INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
     # Get log
-    aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${superbatch}.log
+    sudo aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${superbatch}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} #TODO uncomment
+#   sudo aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} #TODO uncomment
     exit 1 # shouldn't happen
 }
 
