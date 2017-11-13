@@ -39,7 +39,7 @@ terminate() {
     aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${superbatch}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID}
+#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} #TODO uncomment
     exit 1 # shouldn't happen
 }
 
@@ -125,7 +125,7 @@ do
     # Download files from S3
     sudo ${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/mutea_aws.sh \
 	${HOMEDIR}/ssc-imputation/mutation-rates/mutea-auto/params.sh \
-	${batch} || die "Failed on batch ${batch}"
+	${batch}
 done
 
 terminate

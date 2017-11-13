@@ -12,6 +12,16 @@ die()
     exit 1
 }
 
+# Download batch
+aws s3 cp ${AWSBATCHPATH}/${BATCH} /mnt/batches/
+batchpath=/mnt/batches/${BATCH}
+
+# Get batch info
+chrom=$(echo $BATCH | cut -f 1 -d'.')
+start=$(head -n 1 $batchpath | cut -f 2)
+end=$(tail -n 1 $batchpath | cut -f 3)
+batchnum=$(echo $BATCH | cut -f 2 -d'.')
+
 # Output paths
 outdir=/mnt/batch_estimates 
 outfile=ssc_hipstr_mutea_chrom${chrom}_batch${batchnum}.tab
@@ -20,15 +30,7 @@ outfile=ssc_hipstr_mutea_chrom${chrom}_batch${batchnum}.tab
 x=$(aws s3 ls s3://ssc-mutea/batch_estimates/${outfile}.gz | awk '{print $NF}')
 test -z $x || exit 0
 
-# Download batch
-aws s3 cp ${AWSBATCHPATH}/${BATCH} /mnt/batches/
-batchpath=/mnt/batches/${BATCH}
-batchnum=$(echo $BATCH | cut -f 2 -d'.')
-
 # Download relevant VCF chunk
-chrom=$(echo $BATCH | cut -f 1 -d'.')
-start=$(head -n 1 $batchpath | cut -f 2)
-end=$(tail -n 1 $batchpath | cut -f 3)
 strvcf=/mnt/vcfs/${BATCH}.vcf.gz
 tabix --print-header s3://ssc-strvcf/hipstr.chr${chrom}.asdt.vcf.gz ${chrom}:${start}-${end} | \
     bgzip -c > ${strvcf}
