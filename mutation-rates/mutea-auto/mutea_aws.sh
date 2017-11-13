@@ -12,14 +12,7 @@ die()
     exit 1
 }
 
-# Download batch
-aws s3 cp ${AWSBATCHPATH}/${BATCH} /mnt/batches/
-batchpath=/mnt/batches/${BATCH}
-
-# Get batch info
 chrom=$(echo $BATCH | cut -f 1 -d'.')
-start=$(head -n 1 $batchpath | cut -f 2)
-end=$(tail -n 1 $batchpath | cut -f 3)
 batchnum=$(echo $BATCH | cut -f 2 -d'.')
 
 # Output paths
@@ -29,6 +22,14 @@ outfile=ssc_hipstr_mutea_chrom${chrom}_batch${batchnum}.tab
 # Check if outfile already on S3. If yes, don't recompute
 x=$(aws s3 ls s3://ssc-mutea/batch_estimates/${outfile}.gz | awk '{print $NF}')
 test -z $x || exit 0
+
+# Download batch
+aws s3 cp ${AWSBATCHPATH}/${BATCH} /mnt/batches/
+batchpath=/mnt/batches/${BATCH}
+
+# Get batch info
+start=$(head -n 1 $batchpath | cut -f 2)
+end=$(tail -n 1 $batchpath | cut -f 3)
 
 # Download relevant VCF chunk
 strvcf=/mnt/vcfs/${BATCH}.vcf.gz
