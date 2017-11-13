@@ -39,7 +39,7 @@ terminate() {
     aws s3 cp --output table /var/log/cloud-init-output.log ${OUTBUCKET}/log/${superbatch}.log
     # Terminate instance
     echo "Terminating instance ${INSTANCE_ID}"
-    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID}
+#    aws ec2 terminate-instances --output table --instance-ids ${INSTANCE_ID} # TODO recomment
     exit 1 # shouldn't happen
 }
 
@@ -60,6 +60,10 @@ sudo apt-get update || die "Could not update"
 sudo apt-get -y install awscli || die "Could not install aws"
 sudo apt-get -y install git || die "Could not install git"
 sudo apt-get -y install make gcc libz-dev libncurses5-dev libbz2-dev liblzma-dev libcurl3-dev libssl-dev autoconf || die "Could not install devtools"
+sudo apt-get install -y python-setuptools python-dev build-essential || die "Could not install python"
+sudo easy_install pip || die "Could not install pip"
+sudo pip install joblib numpy scipy pytabix pyvcf statsmodels pycallgraph pysam || die "Could not install python libraries"
+
 mkdir -p ${HOMEDIR}/source || die "Could not create source dir"
 cd ${HOMEDIR}/source || die "Could not go to source dir"
 
@@ -112,6 +116,7 @@ aws s3 cp ${SUPERBATCHPATH} /mnt/tmp/superbatch.txt
 # Make directory for inputs/outputs
 sudo mkdir -p /mnt/vcfs || die "Could not make vcfs directory"
 sudo mkdir -p /mnt/batch_estimates || die "Could not make output directory"
+sudo mkdir -p /mnt/batches/
 
 # Run each job
 for batch in $(cat /mnt/tmp/superbatch.txt)

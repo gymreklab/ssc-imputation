@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#SBATCH -A ddp268
+#SBATCH -p shared
+#SBATCH -t 1000
+#SBATCH --get-user-env
+
 source params.sh
 
 for chrom in $(seq 1 22)

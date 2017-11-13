@@ -11,6 +11,7 @@ CODIS=/home/mgymrek/workspace/ssc-imputation/mutation-rates/mutea-auto/CODIS.bed
 BATCHSIZE=5000
 AWSBATCHSIZE=500 # size of individual batches
 AWSSUPERBATCHSIZE=70 # each instance gets this many batches to process
+AWSBATCHPATH=s3://ssc-mutea/batches
 
 MINSAMPLES=50
 MINMU=0.00000001
