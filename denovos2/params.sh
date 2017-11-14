@@ -19,6 +19,9 @@ SEGDUP=/storage/resources/dbase/human/hg19/hg19_segmentalduplications.bed
 CODING=/storage/mgymrek/gtex/annotations/coding.bed
 UTR3=/storage/mgymrek/gtex/annotations/3utr.bed
 UTR5=/storage/mgymrek/gtex/annotations/5utr.bed
+INTRON=/storage/mgymrek/gtex/annotations/introns.bed
+DONOR=/storage/mgymrek/gtex/annotations/donorsites.bed
+ACCEPTOR=/storage/mgymrek/gtex/annotations/acceptorsites.bed
 PROMOTER1KB=/storage/mgymrek/gtex/annotations/hg19_promoter_1kb.bed
 PROMOTER3KB=/storage/mgymrek/gtex/annotations/hg19_promoter_3kb.bed
 PROMOTER5KB=/storage/mgymrek/gtex/annotations/hg19_promoter_5kb.bed
@@ -28,6 +31,11 @@ CONSTRAINT=/storage/mgymrek/ssc-denovos/mutea-results/ssc_autosomal_perlocus_con
 HIPPROP=/storage/mgymrek/ssc-denovos/denovos2/other-data/GRCh37.hipstr_reference_sorted_properties.tab.gz
 ASDGENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/SFARI-Gene_genes_export13-11-2017.csv
 RNABP=/storage/mgymrek/gtex/causality/features/hipstr_rnabp_hg19_total.bed
+TF=/storage/mgymrek/gtex/causality/features/hipstr_tfbs_hg19_total.bed
+HISTONE=/storage/mgymrek/gtex/causality/features/hipstr_histone_hg19.bed
+ESTRS=/storage/mgymrek/gtex/causality/GTEx_merged_causality.tab 
+CYTOBANDS=/storage/mgymrek/ssc-denovos/denovos2/other-data/cytoBand.txt.gz
+ASDCNV=/storage/mgymrek/ssc-denovos/denovos2/other-data/SFARI-CNV-annotated.tab
 
 # Annotation and filtering parameters
 MINCHILDREN=50
