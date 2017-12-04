@@ -2,6 +2,8 @@
 
 source params.sh
 
+tmpdir=$(mktemp -d)
+
 ########################################
 # Which loci to filter
 
@@ -67,7 +69,86 @@ cat ${EXAC} | grep -v chr | awk '{print $3 "\t" $5 "\t" $6 "\t" $20}' | \
 cat ${CODING} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
     ${ANNDIR}/annotations_coding.txt
+# UTRs
+cat ${UTR3} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_3utr.txt
+cat ${UTR5} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_5utr.txt
+# Promoters
+cat ${PROMOTER1KB} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_promoter1kb.txt
+cat ${PROMOTER3KB} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_promoter3kb.txt
+cat ${PROMOTER5KB} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_promoter5kb.txt
+# Introns
+cat ${INTRON} | grep -v track | sed 's/^chr//' | cut -f 1-3 | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_introns.txt
 
+# Splice sites
+cat ${DONOR} | sed 's/^chr//' | sort -k1,1 -k2,2n | \
+    closestBed -a ${ANNDIR}/all_loci.bed -b stdin -D b | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq > ${ANNDIR}/annotations_donor.txt
+cat ${ACCEPTOR} | sed 's/^chr//' | sort -k1,1 -k2,2n | \
+    closestBed -a ${ANNDIR}/all_loci.bed -b stdin -D b | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq > ${ANNDIR}/annotations_acceptor.txt
+
+# TF binding sites
+cat ${TF} | sed 's/^chr//' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_tfbs.txt
+
+# Histone mods (GM12878)
+for colnum in $(seq 6 14)
+do
+    hmod=$(head -n 1 ${HISTONE} | cut -f ${colnum} | sed 's/_GM12878//')
+    cat ${HISTONE} | cut -f 1-3,${colnum} | grep -v chrom | sed 's/^chr//' | \
+	intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+	awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+	sort -k1,1 -k2,2n | uniq | \
+	datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_${hmod}.txt
+done
+
+# RNA binding sites 
+cat ${RNABP} | sed 's/^chr//' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_rnabp.txt
+
+# Known autism genes (within 10kb)
+for genescore in S 1 2 3 4 5 6
+do
+    cat ${ASDGENES} | awk -F',' -v"genescore=$genescore" '($(NF-2)==genescore)' | \
+	cut -d',' -f 2 | sort > ${tmpdir}/${genescore}_sfarigenes.txt
+    cat ${GENES} | grep -w -f ${tmpdir}/${genescore}_sfarigenes.txt - | grep -v "-" | \
+	awk '{print $1 "\t" $2-10000 "\t" $3+10000}' | \
+	intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -c > \
+	${ANNDIR}/annotations_sfari${genescore}.txt
+done
+# Known autism CNVs
+cat ${ASDCNV} | grep -v chrom | awk '($3>$2)' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" ($NF=="."?"0":$NF)}' |  \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_sfaricnv.txt
+
+# ESTRs
+cat ${ESTRS} | awk '($6<0.05)' | awk '{print $2 "\t" $3 "\t" $3+1}' | sed 's/^chr//' | sed 's/\.0//' | \
+    grep -v best | grep -v NA | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_estrs.txt
+    
 # STR constraint scores
 cat ${CONSTRAINT} | grep -v chrom | awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
@@ -88,7 +169,6 @@ zcat ${HIPPROP} | grep -v chrom | cut -f 1-4 | \
     datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_motif.txt
 
 # Combine annotations
-tmpdir=$(mktemp -d)
 cp ${ANNDIR}/all_loci.bed ${tmpdir}/all_loci.bed
 header="chrom,start,end"
 for f in $(ls ${ANNDIR}/annotations*.txt)
