@@ -13,6 +13,7 @@ MINCOV=10
 MINSPANCOV=10
 MINSCORE=0.9
 MINSUPPREADS=2
+MAXCOUNT=10 # for rare analysis
 
 # Annotation and filtering files
 SEGDUP=/storage/resources/dbase/human/hg19/hg19_segmentalduplications.bed
@@ -31,11 +32,14 @@ CONSTRAINT=/storage/mgymrek/ssc-denovos/mutea-results/ssc_autosomal_perlocus_con
 HIPPROP=/storage/mgymrek/ssc-denovos/denovos2/other-data/GRCh37.hipstr_reference_sorted_properties.tab.gz
 ASDGENES=/storage/mgymrek/ssc-denovos/denovos2/other-data/SFARI-Gene_genes_export13-11-2017.csv
 RNABP=/storage/mgymrek/gtex/causality/features/hipstr_rnabp_hg19_total.bed
+RNABP2=/storage/mgymrek/gtex/causality/features/hipstr_rnabp_hg19_TARDBP.bed
 TF=/storage/mgymrek/gtex/causality/features/hipstr_tfbs_hg19_total.bed
+TFALL=/storage/mgymrek/gtex/causality/features/hipstr_tfbs_hg19.bed
 HISTONE=/storage/mgymrek/gtex/causality/features/hipstr_histone_hg19.bed
 ESTRS=/storage/mgymrek/gtex/causality/GTEx_merged_causality.tab 
 CYTOBANDS=/storage/mgymrek/ssc-denovos/denovos2/other-data/cytoBand.txt.gz
 ASDCNV=/storage/mgymrek/ssc-denovos/denovos2/other-data/SFARI-CNV-annotated.tab
+BRAIN=/storage/mgymrek/ssc-denovos/denovos2/other-data/Brain_expressed_tissues.bed 
 
 # Annotation and filtering parameters
 MINCHILDREN=50

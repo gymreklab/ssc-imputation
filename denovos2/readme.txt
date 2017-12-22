@@ -10,3 +10,6 @@
 
 # Summarize all loci. Use filters learned from previous step
 ./summarize_loci.sh
+
+# Summarize all loci, but only count rare alleles
+./summarize_loci_rare.sh

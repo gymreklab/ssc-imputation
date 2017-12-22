@@ -101,12 +101,21 @@ cat ${ACCEPTOR} | sed 's/^chr//' | sort -k1,1 -k2,2n | \
     awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     sort -k1,1 -k2,2n | uniq > ${ANNDIR}/annotations_acceptor.txt
 
-# TF binding sites
+# TF binding sites (GM12878)
 cat ${TF} | sed 's/^chr//' | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
     awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_tfbs.txt
+for colnum in $(seq 6 126)
+do
+    tf=$(head -n 1 ${TFALL} | cut -f ${colnum} | sed 's/_GM12878//')
+    cat ${TFALL} | cut -f 1-3,${colnum} | grep -v chrom | sed 's/^chr//' | \
+	intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+	awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+	sort -k1,1 -k2,2n | uniq | \
+	datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_${tf}.txt
+done
 
 # Histone mods (GM12878)
 for colnum in $(seq 6 14)
@@ -119,12 +128,19 @@ do
 	datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_${hmod}.txt
 done
 
-# RNA binding sites 
+# RNA binding sites - all
 cat ${RNABP} | sed 's/^chr//' | \
     intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
     awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_rnabp.txt
+
+# RNABP - specifically TARDBP
+cat ${RNABP2} | sed 's/^chr//' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -wa -wb -loj | \
+    awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
+    sort -k1,1 -k2,2n | uniq | \
+    datamash -g 1,2,3 sum 4 > ${ANNDIR}/annotations_rnabpTARDBP.txt
 
 # Known autism genes (within 10kb)
 for genescore in S 1 2 3 4 5 6
@@ -167,6 +183,11 @@ zcat ${HIPPROP} | grep -v chrom | cut -f 1-4 | \
     awk '{print $1 "\t" $2 "\t" $3 "\t" $NF}' | \
     sort -k1,1 -k2,2n | uniq | \
     datamash -g 1,2,3 unique 4 > ${ANNDIR}/annotations_motif.txt
+
+# Brain expressed tissues
+cat ${BRAIN} | sed 's/chr//' | \
+    intersectBed -a ${ANNDIR}/all_loci.bed -b stdin -c -wa > \
+    ${ANNDIR}/annotations_brain.txt
 
 # Combine annotations
 cp ${ANNDIR}/all_loci.bed ${tmpdir}/all_loci.bed

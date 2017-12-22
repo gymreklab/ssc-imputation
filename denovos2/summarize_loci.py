@@ -17,7 +17,7 @@ def ERROR(msg):
     MSG(msg)
     sys.exit(1)
 
-def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_families, min_children):
+def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_families, min_children, max_count):
     # Apply filters first
     if filter_both_kids:
         mutfam = df[(df["posterior"]>=pthresh)].groupby("family", as_index=False).agg({"child": len})
@@ -36,14 +36,14 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
         return None
     period = df["period"].values[0]
     total_children = df.shape[0]
-    total_mutations = df[(df["posterior"]>=pthresh)].shape[0]
+    total_mutations = df[(df["posterior"]>=pthresh) & (df["unk_count"]<=max_count)].shape[0]
     total_mutation_rate = total_mutations*1.0/total_children
     affected_children = df[(df["phenotype"]==2)].shape[0]
-    affected_mutations = df[(df["phenotype"]==2) & (df["posterior"]>=pthresh)].shape[0]
+    affected_mutations = df[(df["phenotype"]==2) & (df["posterior"]>=pthresh) & (df["unk_count"] <= max_count)].shape[0]
     affected_new_mutations = df[(df["phenotype"]==2) & (df["posterior"]>=pthresh) & df["isnew"]].shape[0]
     affected_mutation_rate = affected_mutations*1.0/affected_children
     unaffected_children = df[(df["phenotype"]==1)].shape[0]
-    unaffected_mutations = df[(df["phenotype"]==1) & (df["posterior"]>=pthresh)].shape[0]
+    unaffected_mutations = df[(df["phenotype"]==1) & (df["posterior"]>=pthresh) & (df["unk_count"] <= max_count)].shape[0]
     unaffected_new_mutations = df[(df["phenotype"]==1) & (df["posterior"]>=pthresh) & df["isnew"]].shape[0]
     unaffected_mutation_rate = unaffected_mutations*1.0/unaffected_children
     n11 = affected_mutations
@@ -56,11 +56,11 @@ def ProcessLocus(df, pthresh, outm, outmcols, filter_both_kids, max_filtered_fam
     n21n = unaffected_new_mutations
     n22n = unaffected_children - unaffected_new_mutations
     pvalue_new = scipy.stats.fisher_exact([[n11n,n12n],[n21n,n22n]], alternative="greater")[1]
-    children_with_mutations = ",".join(list(df[(df["posterior"]>=pthresh)].apply(lambda x: x["family"]+":"+str(x["phenotype"])+":"+ \
+    children_with_mutations = ";".join(list(df[(df["posterior"]>=pthresh) & (df["unk_count"]<=max_count)].apply(lambda x: x["family"]+":"+str(x["phenotype"])+":"+ \
                                                                                  x["newallele"]+":"+ \
-                                                                                 x["ctrl_count"]+","+x["case_count"]+","+x["unk_count"], 1).values))
+                                                                                 str(x["ctrl_count"])+","+str(x["case_count"])+","+str(x["unk_count"]), 1).values))
     # Output mutations
-    df[(df["posterior"]>=pthresh)][["chrom"]+outmcols[1:]].to_csv(outm, header=False, index=False, sep="\t")
+    df[(df["posterior"]>=pthresh) & (df["unk_count"]<=max_count)][["chrom"]+outmcols[1:]].to_csv(outm, header=False, index=False, sep="\t")
     outm.flush()
 
     # Return summary line
@@ -91,6 +91,7 @@ def ReadDenovoData(allmutations, chrom, start, keys):
     df["prior"] = df["prior"].apply(float)
     df["phenotype"] = df["phenotype"].apply(int)
     df["posterior"] = df["posterior"].apply(float)
+    df["unk_count"] = df["unk_count"].apply(int)
     df["isnew"] = df["isnew"].apply(lambda x: x=="1")
     return df
 
@@ -106,6 +107,7 @@ def main():
     parser.add_argument("--min-children", help="Remove loci if less than this many total unaffected children analyzed", type=int, default=0)
     parser.add_argument("--pthresh", help="Posterior threshold to call something a mutation", type=float, required=True)
     parser.add_argument("--chrom", help="Only look at loci on this chromosome", type=str, default=None)
+    parser.add_argument("--maxcount", help="Max count in parents to filter denovo", type=int, default=100000)
     args = parser.parse_args()
 
     # Check input
@@ -169,7 +171,7 @@ def main():
             end = loc_ann["end"].values[0]
         loc_denovo = ReadDenovoData(args.allmutations, chrom, start, outmcols)
         denovodata = ProcessLocus(loc_denovo, args.pthresh, outm, outmcols, args.filter_both_kids,
-                                  args.max_filtered_families, args.min_children)
+                                  args.max_filtered_families, args.min_children, args.maxcount)
         if denovodata is None:
             MSG("Skipping locus %s:%s, no data after filtering or too many families failed filter."%(chrom, start))
             continue
