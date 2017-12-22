@@ -9,5 +9,7 @@
 # Run
 ./run_aws.sh
 
+# Compile
+./compile_aws.sh
 
 
