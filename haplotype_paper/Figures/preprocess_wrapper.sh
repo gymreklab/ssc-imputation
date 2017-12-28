@@ -8,4 +8,4 @@ for chrom in $(seq 1 22)
 do
     cmd="./preprocess_vcfs.sh ${VCFPATH} ${TMPPATH} ${FAMFILE} ${chrom}"
     echo $cmd
-done | xargs -P 5 -I% -n 1 sh -c "${cmd}"
+done | xargs -P 5 -I% -n 1 sh -c "%"
