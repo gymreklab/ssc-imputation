@@ -12,4 +12,11 @@
 # Compile
 ./compile_aws.sh
 
+# Filter and scale
+./filter_and_scale_aws.sh
+
+# Summarize mutation models - TODO
+./summarize_mutation_models.sh
+
+
 
