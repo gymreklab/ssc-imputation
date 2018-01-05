@@ -36,7 +36,9 @@ def GetLocusStats(record, samples=[]):
     hwe_p = scipy.stats.binom_test(obs_het, n=obs_het+obs_hom, p=1-exp_hom_frac)
     # Compute heterozygosity
     het = 1-sum([allele_freqs[al]**2 for al in allele_freqs.keys()])
-    return hwe_p, het
+    # Get mean allele length
+    mean_allele = sum([al*allele_freqs[al] for al in allele_freqs])
+    return hwe_p, het, mean_allele
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
@@ -50,10 +52,10 @@ def main():
 
     reader = vcf.Reader(open(args.vcf, "rb"))
     for record in reader:
-        hwe_p, het = GetLocusStats(record, samples=samples)
+        hwe_p, het, mean_allele = GetLocusStats(record, samples=samples)
         num_calls = record.INFO["AN"]/2
         sys.stdout.write("\t".join(map(str, [record.CHROM, record.INFO["START"], record.INFO["END"], \
-                                                 hwe_p, num_calls, het]))+"\n")
+                                                 hwe_p, num_calls, het, mean_allele]))+"\n")
         sys.stdout.flush()
 
 if __name__ == "__main__":

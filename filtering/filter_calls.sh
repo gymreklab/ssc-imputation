@@ -19,4 +19,4 @@ python /home/mgymrek/workspace/HipSTR-main/scripts/filter_vcf.py \
     --max-call-stutter 0.15 \
     | bgzip -c> ${outvcf}
 
-tabix -p vcf ${outvcf}
+tabix -f -p vcf ${outvcf}

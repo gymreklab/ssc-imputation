@@ -4,7 +4,7 @@ source params.sh
 
 sbatch \
     -A csd568 \
-    --array=1-22 \
+    --array=1-22%3 \
     -p shared \
     --mem=3G \
     -t 2000 \

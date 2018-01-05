@@ -9,9 +9,9 @@ else
     CHROM=${SLURM_ARRAY_TASK_ID}
 fi
 
-# Combine all filter files to a single one - TODO
+# Combine all filter files to a single one
 FILTERFILE=${FILTERDIR}/hipstr_combined_info_chr${CHROM}.tab
-echo "chrom,start,end,period,hrun,segdup,hwe.p,numcalls,het" | sed 's/,/\t/g' > ${FILTERFILE}
+echo "chrom,start,end,period,hrun,segdup,hwe.p,numcalls,het,mean_allele" | sed 's/,/\t/g' > ${FILTERFILE}
 cat ${HRUN} | sed 's/chr//' | intersectBed -a stdin -b ${SEGDUP} -c | grep -w "^${CHROM}" | \
     intersectBed -a stdin -b ${FILTERDIR}/hipstr_filtered_locstats_chr${CHROM}.tab -wa -wb -f 1 | \
     cut -f 7-9 --complement >> ${FILTERFILE}
@@ -26,4 +26,5 @@ cat ${HRUN} | sed 's/chr//' | intersectBed -a stdin -b ${SEGDUP} -c | grep -w "^
     --min-het 0.095 \
     --max-hrun-offset -1 \
     --filter-segdup 
-tabix -p vcf ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf.gz
+bgzip -f ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf
+tabix -p vcf -f ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf.gz

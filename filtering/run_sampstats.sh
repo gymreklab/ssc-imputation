@@ -9,6 +9,6 @@ sbatch \
     --mem=3G \
     -t 2000 \
     --get-user-env \
-    --job-name=locstats \
-    -o ${LOGDIR}/locstats_%a.out -e ${LOGDIR}/locstats_%a.err \
-    ./get_locstats.sh
+    --job-name=sampstats \
+    -o ${LOGDIR}/sampstats_%a.out -e ${LOGDIR}/sampstats_%a.err \
+    ./get_sampstats.sh
