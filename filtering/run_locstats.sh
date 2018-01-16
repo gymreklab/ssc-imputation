@@ -4,9 +4,9 @@ source params.sh
 
 sbatch \
     -A csd568 \
-    --array=1-22 \
+    --array=1,2,17,22 \
     -p shared \
-    --mem=3G \
+    --mem=8G \
     -t 2000 \
     --get-user-env \
     --job-name=locstats \

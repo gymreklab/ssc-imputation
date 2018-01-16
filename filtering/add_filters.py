@@ -59,7 +59,7 @@ def main():
         }
     for f in adict:
         reader.add_filter_to_header({"ID": f, "Description": adict[f]})
-    writer = Writer(args.out + ".vcf", reader)
+    writer = Writer("/dev/stdout", reader)
     for record in reader:
         filters = filter_dict.get(record.INFO["START"], "MissingInfo")
         if filters != ".":

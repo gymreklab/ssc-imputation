@@ -1,0 +1,10 @@
+CHROM=10
+DIR=/oasis/projects/nsf/csd568/mgymrek/ssc-quads/snpstr-ld
+SNPS=${DIR}/shapeit.chr${CHROM}.reorder.vcf.gz # TODO change to final path for these?
+STRS=/oasis/projects/nsf/csd568/mgymrek/ssc-quads/hipstr_vcfs/final/hipstr.chr${CHROM}.allfilters.vcf.gz
+PARENTS=~/workspace/ssc-imputation/metadata/ssc_parent_ids.txt
+SAMPLES=${DIR}/tmp/samples_list.txt
+WINDOWKB=50
+MAF=0.05
+MINAC=54 # corresponds to 0.05*1080
+MAXSNPS=100000 # max snps to look at per STR

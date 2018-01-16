@@ -25,6 +25,5 @@ cat ${HRUN} | sed 's/chr//' | intersectBed -a stdin -b ${SEGDUP} -c | grep -w "^
     --min-callrate 0.8 \
     --min-het 0.095 \
     --max-hrun-offset -1 \
-    --filter-segdup 
-bgzip -f ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf
+    --filter-segdup | bgzip -c > ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf.gz
 tabix -p vcf -f ${FINALVCFS}/hipstr.chr${CHROM}.allfilters.vcf.gz

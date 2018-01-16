@@ -11,4 +11,4 @@
 ./run_sampstats.sh
 
 # Get Mendelian inheritance for chr21
-./vcf_mend.sh 21
+sbatch ./vcf_mend.sh 21
