@@ -5,6 +5,8 @@ source params.sh
 tmpdir=$(mktemp -d)
 echo $tmpdir
 
+# Make file with: chrom, start, stop, period, rate, beta, geomp, central_allele
+
 for period in $(seq 1 6)
 do
     logmu=$(cat ${MUTPARAMS} | awk -v"period=$period" '($1==period)' | awk '{print $2}')
