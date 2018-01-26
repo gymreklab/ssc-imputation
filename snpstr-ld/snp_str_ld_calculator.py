@@ -11,15 +11,27 @@ Calculate LD between an STR and SNP variant
   --snp-locus-rsid rs11740474 \
   --use-info-start
 
-TODO add:
-- allelic r2 (return list of ld, rather than single)
-- all pairwise snp/str in some window
-- --str-vcf2 argument if want to compare imputed vs. ground truth
-- remove outliers
+./snp_str_ld_calculator.py \
+  --str-vcf /storage/s1saini/hipstr_rerun/chr5/hipstr.chr5.with.1kg.filtered.vcf.gz \
+  --snp-vcf /storage/resources/datasets/SSC_SNP_v2/shapeit.chr5.with.ref.vcf.gz \
+  --pairwise-snpstr
+
+./snp_str_ld_calculator.py \
+  --str-vcf hipstr.1kg.EUR.filtered.vcf.gz \
+  --str-vcf2 1kg.EUR.wgs.imputed.vcf.gz \
+  --allele-r2 --mincount 3
+
+./snp_str_ld_calculator.py \
+  --str-vcf /storage/s1saini/hipstr_rerun/chr5/hipstr.chr5.with.1kg.filtered.vcf.gz \
+  --snp-vcf /storage/resources/datasets/SSC_SNP_v2/shapeit.chr5.with.ref.vcf.gz \
+  --loci-file-rsid /storage/mgymrek/ssc-imputation/pgc/bychrom/ldfile_5.tab \
+  --samples ~/workspace/ssc-imputation/metadata/ssc_parent_ids.txt \
+  --use-info-start
 
 """
 
 import argparse
+import numpy as np
 import sys
 import vcf
 import scipy.stats
@@ -27,14 +39,77 @@ import scipy.stats
 START_BUFFER = 10
 
 def PrintLine(str_locus, snp_locus, ld):
-    if ld is None: return
-    ld_r, ld_pval = ld
-    ld_r2 = ld_r**2
-    sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, ld_r2, ld_pval]))+"\n")
-    sys.stdout.flush()
+    for ldval in ld:
+        if ldval is None: return
+        ld_r, ld_pval = ldval[0]
+        allele = ldval[1]
+        freq = ldval[2]
+        ld_r2 = ld_r**2
+        kldiv = ldval[3]
+        sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, allele, freq, kldiv, ld_r2, ld_pval]))+"\n")
+        sys.stdout.flush()
 
-def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[]):
-    sample_to_gts = {} # sample -> {"str", "snp"}
+def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0):
+    sample_to_gts = {}
+    all_str_alleles = set()
+    allele_counts = {}
+    allele_counts2 = {} # if using str2
+    for sample in str_record:
+        sample_to_gts[sample.sample] = {"STR": None, "SNP": None}
+        if sample["GB"]:
+            alleles = map(int, sample["GB"].split("|"))
+            for a in alleles:
+                all_str_alleles.add(a)
+                allele_counts[a] = allele_counts.get(a, 0) + 1
+            sample_to_gts[sample.sample]["STR"] = alleles
+    for sample in snp_record:
+        if sample.sample not in sample_to_gts.keys():
+            continue
+        if sample["GT"]:
+            if str2: # 2nd STR is imputed. Get diff from reference
+                alleles = [0] + [len(snp_record.ALT[i])-len(snp_record.REF) for i in range(len(snp_record.ALT))]
+                gt = map(int, sample.gt_alleles)
+                for i in range(len(gt)):
+                    a = alleles[gt[i]]
+                    allele_counts2[a] = allele_counts2.get(a, 0) + 1
+                sample_to_gts[sample.sample]["SNP"] = [alleles[gt[0]], alleles[gt[1]]]
+            else:
+                sample_to_gts[sample.sample]["SNP"] = map(int, sample.gt_alleles)
+    kldiv = None
+    if str2: kldiv = GetKLDivergence(allele_counts, allele_counts2, mincount)
+    if allele_r2:
+        ldresults = []
+        for a in all_str_alleles:
+            str_data = []
+            snp_data = []
+            if allele_counts[a] < mincount: continue
+            for sample in sample_to_gts:
+                if len(samples)>0 and sample not in samples: continue
+                if sample_to_gts[sample]["STR"] is not None and sample_to_gts[sample]["SNP"] is not None:
+                    # Enforce allele count
+                    if allele_counts[sample_to_gts[sample]["STR"][0]] < mincount: continue
+                    if allele_counts[sample_to_gts[sample]["STR"][1]] < mincount: continue
+                    if str2 and allele_counts2[sample_to_gts[sample]["SNP"][0]] < mincount: continue
+                    if str2 and allele_counts2[sample_to_gts[sample]["SNP"][1]] < mincount: continue
+                    str_data.append(sum(map(lambda x: int(x==a), sample_to_gts[sample]["STR"])))
+                    if str2:
+                        snp_data.append(sum(map(lambda x: int(x==a), sample_to_gts[sample]["SNP"])))
+                    else:
+                        snp_data.append(sum(sample_to_gts[sample]["SNP"]))
+            ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/(2*len(str_data)), kldiv)
+            ldresults.append(ld)
+        return ldresults
+    else:
+        str_data = []
+        snp_data = []
+        for sample in sample_to_gts:
+            if len(samples)>0 and sample not in samples: continue
+            if sample_to_gts[sample]["STR"] is not None and sample_to_gts[sample]["SNP"] is not None:
+                str_data.append(sum(sample_to_gts[sample]["STR"]))
+                snp_data.append(sum(sample_to_gts[sample]["SNP"]))
+        return [(scipy.stats.pearsonr(str_data, snp_data), "locus", 1, kldiv)]
+
+def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, min_count=0):
     # Find STR record.
     chrom, start = str_locus.split(":")
     start = int(start)
@@ -47,22 +122,18 @@ def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, s
                 break
         if str_record is None:
             sys.stderr.write("ERROR: couldn't find STR record for %s\n"%start)
-            return None
+            return [None]
     else:
         records = str_reader.fetch(chrom, start, start+1)
         for r in records:
             str_record = r
             if r is None:
                 sys.stderr.write("ERROR: couldn't find STR record for %s\n"%start)
-                return None
+                return [None]
             break
         if str_record is None or str_record.POS != start:
             sys.stderr.write("ERROR: couldn't find STR record for %s\n"%start)
-            return None
-    for sample in str_record:
-        sample_to_gts[sample.sample] = {"STR": None, "SNP": None}
-        if sample["GB"]:
-            sample_to_gts[sample.sample]["STR"] = sum(map(int, sample["GB"].split("|")))
+            return [None]
     # Find SNP record
     snp_chrom, snp_start = snp_locus.split(":")
     snp_start = int(snp_start)
@@ -73,23 +144,28 @@ def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, s
         break
     if snp_record is None:
         sys.stderr.write("Could not find SNP locus %s\n"%snp_locus)
-        return None
+        return [None]
     if snp_record.POS != snp_start:
         sys.stderr.write("ERROR: couldn't find SNP record for %s\n"%snp_start)
-        return None
-    for sample in snp_record:
-        if sample.sample not in sample_to_gts.keys():
-            continue
-        if sample["GT"]:
-            sample_to_gts[sample.sample]["SNP"] = sum(map(int, sample.gt_alleles))
-    str_data = []
-    snp_data = []
-    for sample in sample_to_gts:
-        if len(samples)>0 and sample not in samples: continue
-        if sample_to_gts[sample]["STR"] is not None and sample_to_gts[sample]["SNP"] is not None:
-            str_data.append(sample_to_gts[sample]["STR"])
-            snp_data.append(sample_to_gts[sample]["SNP"])
-    return scipy.stats.pearsonr(str_data, snp_data)
+        return [None]
+    return CalcLD_r(str_record, snp_record, samples=samples, allele_r2=allele_r2, mincount=mincount)
+
+def GetKLDivergence(allele_counts, allele_counts2, mincount, pcount=1):
+    p = []
+    q = []
+    alleles = set(allele_counts.keys()).union(set(allele_counts2.keys()))
+    for a in alleles:
+        acount = allele_counts.get(a, 0)
+        if acount < mincount: acount = 0
+        p.append(acount + pcount) # add pseudocount after removing outliers
+        acount2 = allele_counts2.get(a, 0)
+        if acount2 < mincount: acount2 = 0
+        q.append(acount2 + pcount)
+    psum = sum(p)
+    qsum = sum(q)
+    p = [item*1.0/psum for item in p]
+    q = [item*1.0/qsum for item in q]
+    return sum([p[i]*np.log(p[i]*1.0/q[i]) for i in range(len(p))])
 
 def FindSnpLocus(snp_reader, str_locus, snp_locus_rsid, snp_region_start, snp_region_end):
     chrom, start = str_locus.split(":")
@@ -107,7 +183,8 @@ def FindSnpLocus(snp_reader, str_locus, snp_locus_rsid, snp_region_start, snp_re
 def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument("--str-vcf", help="VCF with STR genotypes", type=str, required=True)
-    parser.add_argument("--snp-vcf", help="VCF with SNP genotype", type=str, required=True)
+    parser.add_argument("--snp-vcf", help="VCF with SNP genotype", type=str, required=False)
+    parser.add_argument("--str-vcf2", help="Compare two STR VCFs (e.g. true vs. imputed)", type=str, required=False)
     parser.add_argument("--str-locus", help="chr:start of STR locus", type=str, required=False)
     parser.add_argument("--snp-locus", help="chr:start of SNP locus", type=str, required=False)
     parser.add_argument("--snp-locus-rsid", help="rsid of SNP locus", type=str, required=False)
@@ -116,18 +193,26 @@ def main():
     parser.add_argument("--pairwise-snpstr", help="Calculate pairwise LD for all SNPs within maxdist of the STR", action="store_true")
     parser.add_argument("--max-dist", help="Don't consider snp/str more than this many bp apart", type=int, default=100000)
     parser.add_argument("--use-info-start", help="Match STR start on INFO/START (not POS)", action="store_true")
-    parser.add_argument("--samples", help="Only consider samples in this file", type=str, required=False)
+    parser.add_argument("--samples", help="Only consider samples in this file. (e.g. founders)", type=str, required=False)
+    parser.add_argument("--allele-r2", help="Calculate r2 *per allele* rather than per locus", action="store_true")
+    parser.add_argument("--mincount", help="Remove STR genotypes with an allele of count < this", type=int, default=0)
     args = parser.parse_args()
 
     # Open readers
+    snp_reader = None
+    str_reader2 = None
     str_reader = vcf.Reader(open(args.str_vcf, "rb"))
-    snp_reader = vcf.Reader(open(args.snp_vcf, "rb"))
+    if args.snp_vcf is not None:
+        snp_reader = vcf.Reader(open(args.snp_vcf, "rb"))
+    if args.str_vcf2 is not None:
+        str_reader2 = vcf.Reader(open(args.str_vcf2, "rb"))
 
     # Get samples
     samples = []
     if args.samples is not None:
         samples = [item.strip() for item in open(args.samples, "r").readlines()]
 
+    ###### Case 1: Single SNP/STR ##########
     if args.str_locus:
         str_locus = args.str_locus
         snp_locus = None
@@ -135,7 +220,8 @@ def main():
             snp_locus = args.snp_locus
             snpid = snp_locus
             ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
-                        use_info_start=args.use_info_start, samples=samples)
+                        use_info_start=args.use_info_start, samples=samples, \
+                        allele_r2=args.allele_r2, mincount=args.mincount)
         elif args.snp_locus_rsid:
             snpid = args.snp_locus_rsid
             str_start = int(str_locus.split(":")[1])
@@ -144,13 +230,15 @@ def main():
             snp_locus = FindSnpLocus(snp_reader, args.str_locus, args.snp_locus_rsid, \
                                      snp_region_start, snp_region_end)
             ld = CalcLD(str_reader, snp_reader, args.str_locus, snp_locus, \
-                        use_info_start=args.use_info_start, samples=samples)
+                        use_info_start=args.use_info_start, samples=samples, \
+                        allele_r2=args.allele_r2, mincount=args.mincount)
             if snp_locus is None:
                 sys.stderr.write("ERROR: Couldn't find SNP locus within %s of %s\n"%(args.max_dist, args.str_locus))
         else:
             sys.stderr.write("ERROR: No SNP locus specified. Use --snp-locus or --snp-locus-rsid\n")
         PrintLine(str_locus, snpid, ld)
 
+    ###### Case 2: List of pairs from a file ##########
     # Keep track of snp id positions in case we see same one many times
     snp_rsid_to_pos = {}
     if args.loci_file_rsid is not None or args.loci_file is not None:
@@ -200,12 +288,12 @@ def main():
                         snpid = rsids[i]
                     ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
                                 use_info_start=args.use_info_start, \
-                                samples=samples)
+                                samples=samples, allele_r2=args.allele_r2, mincount=args.mincount)
                     PrintLine(str_locus, snpid, ld)
 
+    ###### Case 3: All SNP-STR pairwise ##########
     if args.pairwise_snpstr:
-        str_reader2 = vcf.Reader(open(args.str_vcf, "rb"))
-        for str_record in str_reader2:
+        for str_record in str_reader:
             str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
             region_start = max([0, str_record.POS - args.max_dist])
             region_end = str_record.POS + args.max_dist
@@ -214,9 +302,26 @@ def main():
             except ValueError:
                 sys.stderr.write("ERROR fetching SNP records for STR locus %s\n"%str_locus)
                 continue
-            snp_loci = ["%s:%s"%(record.CHROM, record.POS) for record in snp_records]
-            for snp_locus in snp_loci:
-                ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
-                            samples=samples)
+            for snp_record in snp_records:
+                snp_locus = "%s:%s"%(snp_record.CHROM, snp_record.POS)
+                ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount)
                 PrintLine(str_locus, snp_locus, ld)
-main()
+
+    ###### Case 4: Compare two STR VCFs ######
+    if str_reader2 is not None:
+        for str_record in str_reader:
+            str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
+            str_record2 = None
+            records = str_reader2.fetch(str_record.CHROM, str_record.POS-START_BUFFER, str_record.POS+1+START_BUFFER)
+            for r in records:
+                if r.POS == str_record.POS:
+                    str_record2 = r
+                    break
+            if str_record2 is None:
+                continue
+            str_locus2 = "%s:%s"%(str_record2.CHROM, str_record2.POS)
+            ld = CalcLD_r(str_record, str_record2, samples=samples, str2=True, allele_r2=args.allele_r2, mincount=args.mincount)
+            PrintLine(str_locus, str_locus2, ld)
+
+if __name__ == "__main__":
+    main()
