@@ -109,7 +109,7 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
                 snp_data.append(sum(sample_to_gts[sample]["SNP"]))
         return [(scipy.stats.pearsonr(str_data, snp_data), "locus", 1, kldiv)]
 
-def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, min_count=0):
+def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, mincount=0):
     # Find STR record.
     chrom, start = str_locus.split(":")
     start = int(start)
@@ -198,6 +198,8 @@ def main():
     parser.add_argument("--mincount", help="Remove STR genotypes with an allele of count < this", type=int, default=0)
     args = parser.parse_args()
 
+    # Output header
+    sys.stdout.write("\t".join(["locus1","locus2","allele","freq","KL","r2","pval"])+"\n")
     # Open readers
     snp_reader = None
     str_reader2 = None
