@@ -1,3 +1,6 @@
+# Each example outputs columns:
+# locus1       locus2  allele	freq	KL	r2	pval
+
 # Get LD for a single SNP/STR pair
 ./snp_str_ld_calculator.py \
   --str-vcf /storage/s1saini/hipstr_rerun/chr5/hipstr.chr5.with.1kg.filtered.vcf.gz \
