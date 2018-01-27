@@ -219,6 +219,7 @@ def main():
     parser.add_argument("--mincount", help="Remove STR genotypes with an allele of count < this", type=int, default=0)
     parser.add_argument("--min-maf", help="Don't consider SNPs below this MAF. Only works properly when 2nd VCF is SNPs", type=float, default=0.0)
     parser.add_argument("--usefilter", help="Filter things not passing in VCF", action="store_true")
+    parser.add_argument("--region", help="Restrict pairwise analysis to a certain region", type=str, required=False)
     args = parser.parse_args()
 
     # Output header
@@ -319,7 +320,10 @@ def main():
 
     ###### Case 3: All SNP-STR pairwise ##########
     if args.pairwise_snpstr:
-        for str_record in str_reader:
+        if args.region != None:
+            str_records = str_reader.fetch(args.region)
+        else: str_records = str_reader
+        for str_record in str_records:
             str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
             region_start = max([0, str_record.POS - args.max_dist])
             region_end = str_record.POS + args.max_dist
