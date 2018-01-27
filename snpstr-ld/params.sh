@@ -1,4 +1,5 @@
-CHROM=10
+CHROM=21
+MAXDIST=50000
 DIR=/oasis/projects/nsf/csd568/mgymrek/ssc-quads/snpstr-ld
 SNPS=${DIR}/shapeit.chr${CHROM}.reorder.vcf.gz # TODO change to final path for these?
 STRS=/oasis/projects/nsf/csd568/mgymrek/ssc-quads/hipstr_vcfs/final/hipstr.chr${CHROM}.allfilters.vcf.gz

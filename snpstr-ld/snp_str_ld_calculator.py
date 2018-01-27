@@ -49,7 +49,12 @@ def PrintLine(str_locus, snp_locus, ld):
         sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, allele, freq, kldiv, ld_r2, ld_pval]))+"\n")
         sys.stdout.flush()
 
-def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0):
+def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0, minmaf=0, usefilter=False):
+    if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
+    if usefilter:
+        print str_record.FILTER, snp_record.FILTER
+        if not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): return [None]
+        if not(snp_record.FILTER is None or snp_record.FILTER == "PASS" or len(snp_record.FILTER) == 0): return [None]
     sample_to_gts = {}
     all_str_alleles = set()
     allele_counts = {}
@@ -104,12 +109,28 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
         snp_data = []
         for sample in sample_to_gts:
             if len(samples)>0 and sample not in samples: continue
-            if sample_to_gts[sample]["STR"] is not None and sample_to_gts[sample]["SNP"] is not None:
-                str_data.append(sum(sample_to_gts[sample]["STR"]))
-                snp_data.append(sum(sample_to_gts[sample]["SNP"]))
-        return [(scipy.stats.pearsonr(str_data, snp_data), "locus", 1, kldiv)]
+            if sample_to_gts[sample]["STR"] is None or sample_to_gts[sample]["SNP"] is None: continue
+            # Enforce allele counts
+            if allele_counts[sample_to_gts[sample]["STR"][0]] < mincount: continue
+            if allele_counts[sample_to_gts[sample]["STR"][1]] < mincount: continue
+            # Get data
+            str_data.append(sum(sample_to_gts[sample]["STR"]))
+            snp_data.append(sum(sample_to_gts[sample]["SNP"]))
+        het = GetHeterozygosity(allele_counts, mincount=mincount)
+        if len(str_data) == 0:
+            print allele_counts, str_record.FILTER
+            sys.exit(1)
+        return [(scipy.stats.pearsonr(str_data, snp_data), "locus", het, kldiv)]
 
-def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, mincount=0):
+def GetHeterozygosity(allele_counts, mincount=0):
+    counts = []
+    for a in allele_counts:
+        if allele_counts[a] < mincount: continue
+        counts.append(allele_counts[a])
+    freqs = [item*1.0/sum(counts) for item in counts]
+    return 1-sum([item**2 for item in freqs])
+
+def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, mincount=0, minmaf=0, usefilter=False):
     # Find STR record.
     chrom, start = str_locus.split(":")
     start = int(start)
@@ -148,7 +169,7 @@ def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, s
     if snp_record.POS != snp_start:
         sys.stderr.write("ERROR: couldn't find SNP record for %s\n"%snp_start)
         return [None]
-    return CalcLD_r(str_record, snp_record, samples=samples, allele_r2=allele_r2, mincount=mincount)
+    return CalcLD_r(str_record, snp_record, samples=samples, allele_r2=allele_r2, mincount=mincount, minmaf=minmaf, usefilter=usefilter)
 
 def GetKLDivergence(allele_counts, allele_counts2, mincount, pcount=1):
     p = []
@@ -196,10 +217,12 @@ def main():
     parser.add_argument("--samples", help="Only consider samples in this file. (e.g. founders)", type=str, required=False)
     parser.add_argument("--allele-r2", help="Calculate r2 *per allele* rather than per locus", action="store_true")
     parser.add_argument("--mincount", help="Remove STR genotypes with an allele of count < this", type=int, default=0)
+    parser.add_argument("--min-maf", help="Don't consider SNPs below this MAF. Only works properly when 2nd VCF is SNPs", type=float, default=0.0)
+    parser.add_argument("--usefilter", help="Filter things not passing in VCF", action="store_true")
     args = parser.parse_args()
 
     # Output header
-    sys.stdout.write("\t".join(["locus1","locus2","allele","freq","KL","r2","pval"])+"\n")
+    sys.stdout.write("\t".join(["locus1","locus2","allele","freq_het","MAF","KL","r2","pval"])+"\n")
     # Open readers
     snp_reader = None
     str_reader2 = None
@@ -223,7 +246,8 @@ def main():
             snpid = snp_locus
             ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
                         use_info_start=args.use_info_start, samples=samples, \
-                        allele_r2=args.allele_r2, mincount=args.mincount)
+                        allele_r2=args.allele_r2, mincount=args.mincount,
+                        minmaf=args.min_maf, usefilter=args.usefilter)
         elif args.snp_locus_rsid:
             snpid = args.snp_locus_rsid
             str_start = int(str_locus.split(":")[1])
@@ -233,7 +257,7 @@ def main():
                                      snp_region_start, snp_region_end)
             ld = CalcLD(str_reader, snp_reader, args.str_locus, snp_locus, \
                         use_info_start=args.use_info_start, samples=samples, \
-                        allele_r2=args.allele_r2, mincount=args.mincount)
+                        allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
             if snp_locus is None:
                 sys.stderr.write("ERROR: Couldn't find SNP locus within %s of %s\n"%(args.max_dist, args.str_locus))
         else:
@@ -290,7 +314,7 @@ def main():
                         snpid = rsids[i]
                     ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
                                 use_info_start=args.use_info_start, \
-                                samples=samples, allele_r2=args.allele_r2, mincount=args.mincount)
+                                samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
                     PrintLine(str_locus, snpid, ld)
 
     ###### Case 3: All SNP-STR pairwise ##########
@@ -306,7 +330,7 @@ def main():
                 continue
             for snp_record in snp_records:
                 snp_locus = "%s:%s"%(snp_record.CHROM, snp_record.POS)
-                ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount)
+                ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
                 PrintLine(str_locus, snp_locus, ld)
 
     ###### Case 4: Compare two STR VCFs ######
@@ -322,7 +346,7 @@ def main():
             if str_record2 is None:
                 continue
             str_locus2 = "%s:%s"%(str_record2.CHROM, str_record2.POS)
-            ld = CalcLD_r(str_record, str_record2, samples=samples, str2=True, allele_r2=args.allele_r2, mincount=args.mincount)
+            ld = CalcLD_r(str_record, str_record2, samples=samples, str2=True, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
             PrintLine(str_locus, str_locus2, ld)
 
 if __name__ == "__main__":
