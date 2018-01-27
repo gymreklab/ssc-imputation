@@ -3,6 +3,10 @@
 """
 Calculate LD between an STR and SNP variant
 
+Note on outputs:
+- freq_het: gives allele freq if using allele-r2, else heterozygosity
+- maf: gives MAF of the SNP, or if 2nd VCF is STRs same as freq_het
+
 # Test
 ./snp_str_ld_calculator.py \
   --str-vcf /storage/s1saini/hipstr_rerun/chr5/hipstr.chr5.with.1kg.filtered.vcf.gz \
@@ -44,15 +48,15 @@ def PrintLine(str_locus, snp_locus, ld):
         ld_r, ld_pval = ldval[0]
         allele = ldval[1]
         freq = ldval[2]
+        maf = ldval[3]
         ld_r2 = ld_r**2
-        kldiv = ldval[3]
-        sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, allele, freq, kldiv, ld_r2, ld_pval]))+"\n")
+        kldiv = ldval[4]
+        sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, allele, freq, maf, kldiv, ld_r2, ld_pval]))+"\n")
         sys.stdout.flush()
 
 def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0, minmaf=0, usefilter=False):
     if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
     if usefilter:
-        print str_record.FILTER, snp_record.FILTER
         if not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): return [None]
         if not(snp_record.FILTER is None or snp_record.FILTER == "PASS" or len(snp_record.FILTER) == 0): return [None]
     sample_to_gts = {}
@@ -81,7 +85,9 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
             else:
                 sample_to_gts[sample.sample]["SNP"] = map(int, sample.gt_alleles)
     kldiv = None
-    if str2: kldiv = GetKLDivergence(allele_counts, allele_counts2, mincount)
+    maf = None
+    if str2:
+        kldiv = GetKLDivergence(allele_counts, allele_counts2, mincount)
     if allele_r2:
         ldresults = []
         for a in all_str_alleles:
@@ -101,12 +107,19 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
                         snp_data.append(sum(map(lambda x: int(x==a), sample_to_gts[sample]["SNP"])))
                     else:
                         snp_data.append(sum(sample_to_gts[sample]["SNP"]))
-            ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/(2*len(str_data)), kldiv)
+            if str2:
+                maf = allele_counts2[a]*1.0/(2*len(snp_data))
+            else:
+                maf = min([snp_record.aaf[0], 1-snp_record.aaf[0]])
+            ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/(2*len(str_data)), maf, kldiv)
             ldresults.append(ld)
         return ldresults
     else:
         str_data = []
         snp_data = []
+        if str2:
+            maf = GetHeterozygosity(allele_counts2, mincount=mincount)
+        else: maf = min([snp_record.aaf[0], 1-snp_record.aaf[0]])
         for sample in sample_to_gts:
             if len(samples)>0 and sample not in samples: continue
             if sample_to_gts[sample]["STR"] is None or sample_to_gts[sample]["SNP"] is None: continue
@@ -118,9 +131,8 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
             snp_data.append(sum(sample_to_gts[sample]["SNP"]))
         het = GetHeterozygosity(allele_counts, mincount=mincount)
         if len(str_data) == 0:
-            print allele_counts, str_record.FILTER
             sys.exit(1)
-        return [(scipy.stats.pearsonr(str_data, snp_data), "locus", het, kldiv)]
+        return [(scipy.stats.pearsonr(str_data, snp_data), "locus", het, maf, kldiv)]
 
 def GetHeterozygosity(allele_counts, mincount=0):
     counts = []
@@ -324,6 +336,8 @@ def main():
             str_records = str_reader.fetch(args.region)
         else: str_records = str_reader
         for str_record in str_records:
+            if args.usefilter:
+                if not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): continue
             str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
             region_start = max([0, str_record.POS - args.max_dist])
             region_end = str_record.POS + args.max_dist

@@ -13,5 +13,4 @@ source params.sh
     --max-dist ${MAXDIST} \
     --min-maf ${MAF} \
     --usefilter \
-    --region 21:15449764-48119754 \
-    --pairwise-snpstr #> ${DIR}/snp_str_ld_chr21.tab 
+    --pairwise-snpstr > ${DIR}/snp_str_ld_chr21.tab 
