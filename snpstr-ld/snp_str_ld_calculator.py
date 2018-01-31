@@ -32,6 +32,7 @@ Note on outputs:
   --samples ~/workspace/ssc-imputation/metadata/ssc_parent_ids.txt \
   --use-info-start
 
+# TODO but with STR frequencies > 1
 """
 
 import argparse
@@ -348,12 +349,17 @@ def main():
                 continue
             for snp_record in snp_records:
                 snp_locus = "%s:%s"%(snp_record.CHROM, snp_record.POS)
+                if snp_locus == str_locus: continue
                 ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
                 PrintLine(str_locus, snp_locus, ld)
 
     ###### Case 4: Compare two STR VCFs ######
     if str_reader2 is not None:
-        for str_record in str_reader:
+        str_records = str_reader
+        if args.region != None:
+            str_records = str_reader.fetch(args.region)
+        for str_record in str_records:
+            if args.usefilter and not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): continue
             str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
             str_record2 = None
             records = str_reader2.fetch(str_record.CHROM, str_record.POS-START_BUFFER, str_record.POS+1+START_BUFFER)

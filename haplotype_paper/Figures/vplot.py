@@ -7,7 +7,26 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
-def Vasarely(obs, exp):
+def GetTrueImpute(df, phased=True, cols=["true_1","true_2","impute_1","impute_2"]):
+    """
+    Input: df with true_1, true_2, impute_1, impute_2
+    Use different columns with "cols" argument
+    If phased, use same order. OTherwise put smallest allele first
+    
+    Return true_gts, imputed_gts
+    """
+    true_gts_counts = {}
+    imputed_gts_counts = {}
+    for i in range(df.shape[0]):
+        true_gts = [df[cols[0]].values[i], df[cols[1]].values[i]]
+        if true_gts[1] > true_gts[0] and not phased: true_gts = true_gts[::-1]
+        imputed_gts = [df[cols[2]].values[i], df[cols[3]].values[i]]
+        if imputed_gts[1] > imputed_gts[0] and not phased: imputed_gts = imputed_gts[::-1]
+        true_gts_counts[tuple(true_gts)] = true_gts_counts.get(tuple(true_gts), 0) + 1
+        imputed_gts_counts[tuple(imputed_gts)] = imputed_gts_counts.get(tuple(imputed_gts), 0) + 1
+    return true_gts_counts, imputed_gts_counts
+
+def Vasarely(obs, exp, fname):
     # First make sure normalized
     obs_total = sum(obs.values())*1.0
     exp_total = sum(exp.values())*1.0
@@ -61,3 +80,4 @@ def Vasarely(obs, exp):
     
     plt.axis('equal')
     plt.axis('off')
+    plt.savefig(fname)
