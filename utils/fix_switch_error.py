@@ -39,7 +39,7 @@ def main():
     for target_record in target_reader:
         if min([target_record.aaf[0], 1-target_record.aaf[0]]) < args.min_maf: continue
         if snp_counter > args.check_snps: break
-        print target_record.POS, snp_counter, target_record.aaf
+#        print target_record.POS, snp_counter, target_record.aaf
         snp_counter += 1
         # Fetch corresponding record in ref vcf
         records = ref_reader.fetch(target_record.CHROM, target_record.POS-1, target_record.POS)
@@ -63,23 +63,26 @@ def main():
                     samples_to_switch[sample.sample][1] += 1
                     
     # Get switch error rate per sample
+    print "getting switch error per sample"
     sample_to_switch_rate = {}
     for sample in samples_to_switch:
         if samples_to_switch[sample][0] > 0:
             sample_to_switch_rate[sample] = samples_to_switch[sample][1]*1.0/samples_to_switch[sample][0]
         else: sample_to_switch_rate[sample] = 0
 
+    print "open vcf"
     vcf1 = VCF(phased)
     samplesInvalid = [sample for sample in sample_to_switch_rate.keys() if sample_to_switch_rate[sample]>args.switch_threshold]
     sampinds = [vcf1.samples.index(sample) for sample in samplesInvalid]
 
+    print "write vcf"
     # Switch phase for incorrect samples
     w = Writer(outvcf, vcf1)
     for v in vcf1:
         gtData = v.genotypes
         for sampind in sampinds:
             gtData[sampind][0],gtData[sampind][1] = gtData[sampind][1], gtData[sampind][0]
-            v.genotypes = gtData
+        v.genotypes = gtData
         w.write_record(v)  
     w.close()
 
