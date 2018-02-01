@@ -6,7 +6,7 @@ Example:
 ./fix_switch_error.py \
   --phased-vcf /storage/s1saini/gl_template/beagle.str1.phased.reorder.vcf.gz \
   --ref-vcf /storage/s1saini/gl_template/shapeit.chr21.with.ref.reorder.vcf.gz \
-  --switch-threshold 0.5
+  --switch-threshold 0.5 --min-maf 0.1 --check-snps 50
 """
 
 import argparse
@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--switch-threshold", help="Switch error threshold", default=0.5, type=float)
     parser.add_argument("--new-vcf", help="Output VCF file. Default stdout", required=False, type=str)
     parser.add_argument("--check-snps", help="Only check this many SNPs", default=1000000, type=int)
+    parser.add_argument("--min-maf", help="MAF threshold to check SNP", default=0.0, type=float)
     args = parser.parse_args()
     phased = args.phased_vcf
     reference = args.ref_vcf
@@ -36,7 +37,9 @@ def main():
 
     snp_counter = 0
     for target_record in target_reader:
+        if min([target_record.aaf[0], 1-target_record.aaf[0]]) < args.min_maf: continue
         if snp_counter > args.check_snps: break
+        print target_record.POS, snp_counter, target_record.aaf
         snp_counter += 1
         # Fetch corresponding record in ref vcf
         records = ref_reader.fetch(target_record.CHROM, target_record.POS-1, target_record.POS)
@@ -66,15 +69,15 @@ def main():
             sample_to_switch_rate[sample] = samples_to_switch[sample][1]*1.0/samples_to_switch[sample][0]
         else: sample_to_switch_rate[sample] = 0
 
+    vcf1 = VCF(phased)
     samplesInvalid = [sample for sample in sample_to_switch_rate.keys() if sample_to_switch_rate[sample]>args.switch_threshold]
+    sampinds = [vcf1.samples.index(sample) for sample in samplesInvalid]
 
     # Switch phase for incorrect samples
-    vcf1 = VCF(phased)
     w = Writer(outvcf, vcf1)
     for v in vcf1:
         gtData = v.genotypes
-        for sample in samplesInvalid:
-            sampind = vcf1.samples.index(sample)
+        for sampind in sampinds:
             gtData[sampind][0],gtData[sampind][1] = gtData[sampind][1], gtData[sampind][0]
             v.genotypes = gtData
         w.write_record(v)  
