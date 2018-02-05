@@ -14,3 +14,10 @@
     --str-vcf2 /storage/s1saini/manuscript_strsnp/fig3/1kg/EUR/1kg.EUR.wgs.imputed.vcf.gz \ 
     --mincount 3 --usefilter \
     --allele-r2 > /storage/mgymrek/ssc-imputation/onekg/onekg_alleler2.tab
+
+# Allele-r2 for SSC onekg - AFR
+./snp_str_ld_calculator.py \
+    --str-vcf /storage/s1saini/manuscript_strsnp/fig3/1kg/AFR/hipstr.1kg.AFR.filtered.vcf.gz \
+    --str-vcf2 /storage/s1saini/manuscript_strsnp/fig3/1kg/AFR/1kg.AFR.wgs.imputed.vcf.gz \ 
+    --mincount 3 --usefilter \
+    --allele-r2 > /storage/mgymrek/ssc-imputation/onekg/onekg_alleler2_afr.tab

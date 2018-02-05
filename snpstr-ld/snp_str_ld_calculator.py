@@ -111,8 +111,9 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
                         snp_data.append(sum(map(lambda x: int(x==a), sample_to_gts[sample]["SNP"])))
                     else:
                         snp_data.append(sum(sample_to_gts[sample]["SNP"]))
+            if len(snp_data) == 0: continue
             if str2:
-                maf = allele_counts2.get(a, 0)*1.0/(2*len(snp_data))
+                maf = allele_counts2.get(a, 0)*1.0/sum(allele_counts2.values())
             else:
                 maf = min([snp_record.aaf[0], 1-snp_record.aaf[0]])
             ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/sum(allele_counts.values()), maf, kldiv)
