@@ -12,3 +12,10 @@
 
 # Get Mendelian inheritance for chr21
 sbatch ./vcf_mend.sh 21
+
+# Visualization
+./vplot.py \
+   --vcf /storage/mgymrek/ssc-imputation/filtered_vcfs/hipstr.chr21.allfilters.vcf.gz \
+   --out bad_locus.pdf \
+   --locus 21:9573172
+

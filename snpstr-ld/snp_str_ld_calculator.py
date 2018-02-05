@@ -32,7 +32,6 @@ Note on outputs:
   --samples ~/workspace/ssc-imputation/metadata/ssc_parent_ids.txt \
   --use-info-start
 
-# TODO but with STR frequencies > 1
 """
 
 import argparse
@@ -64,14 +63,17 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
     all_str_alleles = set()
     allele_counts = {}
     allele_counts2 = {} # if using str2
+    allelelens = [0] + [len(item)-len(str_record.REF) for item in str_record.ALT]
     for sample in str_record:
+        if len(samples)>0 and sample.sample not in samples: continue
         sample_to_gts[sample.sample] = {"STR": None, "SNP": None}
-        if sample["GB"]:
-            alleles = map(int, sample["GB"].split("|"))
-            for a in alleles:
-                all_str_alleles.add(a)
-                allele_counts[a] = allele_counts.get(a, 0) + 1
-            sample_to_gts[sample.sample]["STR"] = alleles
+        if None not in sample.gt_alleles:
+            alleles = map(lambda x: allelelens[int(x)], sample.gt_alleles)
+        else: continue
+        for a in alleles:
+            all_str_alleles.add(a)
+            allele_counts[a] = allele_counts.get(a, 0) + 1
+        sample_to_gts[sample.sample]["STR"] = alleles
     for sample in snp_record:
         if sample.sample not in sample_to_gts.keys():
             continue
@@ -109,10 +111,10 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
                     else:
                         snp_data.append(sum(sample_to_gts[sample]["SNP"]))
             if str2:
-                maf = allele_counts2[a]*1.0/(2*len(snp_data))
+                maf = allele_counts2.get(a, 0)*1.0/(2*len(snp_data))
             else:
                 maf = min([snp_record.aaf[0], 1-snp_record.aaf[0]])
-            ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/(2*len(str_data)), maf, kldiv)
+            ld = (scipy.stats.pearsonr(str_data, snp_data), a, allele_counts[a]*1.0/sum(allele_counts.values()), maf, kldiv)
             ldresults.append(ld)
         return ldresults
     else:
@@ -359,6 +361,7 @@ def main():
         if args.region != None:
             str_records = str_reader.fetch(args.region)
         for str_record in str_records:
+            if len(str_record.REF) == 1: continue # SNP
             if args.usefilter and not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): continue
             str_locus = "%s:%s"%(str_record.CHROM, str_record.POS)
             str_record2 = None

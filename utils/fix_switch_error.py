@@ -39,7 +39,6 @@ def main():
     for target_record in target_reader:
         if min([target_record.aaf[0], 1-target_record.aaf[0]]) < args.min_maf: continue
         if snp_counter > args.check_snps: break
-#        print target_record.POS, snp_counter, target_record.aaf
         snp_counter += 1
         # Fetch corresponding record in ref vcf
         records = ref_reader.fetch(target_record.CHROM, target_record.POS-1, target_record.POS)
