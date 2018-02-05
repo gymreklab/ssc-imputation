@@ -63,7 +63,8 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
     all_str_alleles = set()
     allele_counts = {}
     allele_counts2 = {} # if using str2
-    allelelens = [0] + [len(item)-len(str_record.REF) for item in str_record.ALT]
+    if None in str_record.ALT: allelelens = [0]
+    else: allelelens = [0] + [len(item)-len(str_record.REF) for item in str_record.ALT]
     for sample in str_record:
         if len(samples)>0 and sample.sample not in samples: continue
         sample_to_gts[sample.sample] = {"STR": None, "SNP": None}
