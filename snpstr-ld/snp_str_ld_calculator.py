@@ -75,17 +75,18 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
             all_str_alleles.add(a)
             allele_counts[a] = allele_counts.get(a, 0) + 1
         sample_to_gts[sample.sample]["STR"] = alleles
+    if None in snp_record.ALT: allelelens2 = [0]
+    else: allelelens2 = [0] + [len(snp_record.ALT[i])-len(snp_record.REF) for i in range(len(snp_record.ALT))]
     for sample in snp_record:
         if sample.sample not in sample_to_gts.keys():
             continue
-        if sample["GT"]:
+        if None not in sample.gt_alleles:
             if str2: # 2nd STR is imputed. Get diff from reference
-                alleles = [0] + [len(snp_record.ALT[i])-len(snp_record.REF) for i in range(len(snp_record.ALT))]
                 gt = map(int, sample.gt_alleles)
                 for i in range(len(gt)):
-                    a = alleles[gt[i]]
+                    a = allelelens2[gt[i]]
                     allele_counts2[a] = allele_counts2.get(a, 0) + 1
-                sample_to_gts[sample.sample]["SNP"] = [alleles[gt[0]], alleles[gt[1]]]
+                sample_to_gts[sample.sample]["SNP"] = [allelelens2[gt[0]], allelelens2[gt[1]]]
             else:
                 sample_to_gts[sample.sample]["SNP"] = map(int, sample.gt_alleles)
     kldiv = None
