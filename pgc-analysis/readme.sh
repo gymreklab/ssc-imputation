@@ -13,7 +13,7 @@ done
 ./run_imputation.sh
 
 # Merge all files for each chrom - TODO
-./merge_cohort_results ${chrom}
+./merge_cohort_results.sh ${chrom}
 
-# Perform regression analysis - TODO
+# Perform regression analysis
 ./pgc_regression.sh ${chrom}
