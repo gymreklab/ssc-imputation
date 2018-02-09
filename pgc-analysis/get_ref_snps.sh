@@ -8,5 +8,14 @@ CHROM=$1
 
 REFPANEL=${OUTDIR}/refpanel/chr${CHROM}.str.snp.feb18.vcf.gz
 
-zcat ${REFPANEL} | grep -v "^#" | cut -f 3 | grep -v ":" > ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_chr${CHROM}.txt
-zcat ${REFPANEL} | grep -v "^#" | awk '($3!~/:/)' | cut -f 1-5 > ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_alleles_chr${CHROM}.txt
+cat ${REGIONS} | awk -v"window=$WINDOW" '{print $1 "\t" $2-window "\t" $3+window}' | \
+    intersectBed -a ${REFPANEL} -b stdin | grep -v "^#" | cut -f 3 | grep -v ":" \
+    > ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_chr${CHROM}.txt
+
+cat ${REGIONS} | awk -v"window=$WINDOW" '{print $1 "\t" $2-window "\t" $3+window}' | \
+    intersectBed -a ${REFPANEL} -b stdin | grep -v "^#" | \
+    awk '($3!~/:/)' | cut -f 1-5 > ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_alleles_chr${CHROM}.txt
+
+cat ${REGIONS} | awk -v"window=$WINDOW" '{print $1 "\t" $2-window "\t" $3+window}' | \
+    intersectBed -a ${REFPANEL} -b stdin -header | bgzip -c > ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_alleles_chr${CHROM}.vcf.gz
+tabix -p vcf ${OUTDIR}/refpanel/pos/ssc_refpanel_snps_alleles_chr${CHROM}.vcf.gz
