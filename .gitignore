@@ -5,3 +5,5 @@ nohup.out
 transfer.sh
 *.out
 *.err
+*.pyc
+*.ipynb_checkpoints/*
