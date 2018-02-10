@@ -7,5 +7,5 @@ COHORTFILES=/home/gymrek/pgc_imputation/pgc_eur_mergelist.txt
 
 BEAGLE=/home/gymrek/bin/beagle.08Jun17.d8b.jar
 HIPREF=/home/gymrek/dbase/GRCh37.hipstr_reference.bed
-REGIONS=test_regions.bed # TODO restrict to certain regions for imputation
-WINDOW=50000 # TODO restrict to regions +/- WINDOW
+REGIONS=pgc_gwas_regions.bed
+WINDOW=50000

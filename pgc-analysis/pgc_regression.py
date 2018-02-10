@@ -12,13 +12,22 @@ import vcf
 
 COVARCOLS = ["C1","C2","C3","C4","C5","C6","C7","C9","C15","C18"]
 
+# TODO add back sex, cohort
 def RunRegression(data):
-    formula = "phenotype ~ gtsum+"+"+".join(COVARCOLS+["sex"])
-    pgclogit = logit(formula=formula, data = data[["phenotype","gtsum"]+COVARCOLS+["sex"]]).fit(disp=0)
+    formula = "phenotype ~ gtsum+C(sex)+C(cohort)+"+"+".join(COVARCOLS)
+    pgclogit = logit(formula=formula, data=data).fit(disp=0)
     return pgclogit
 
-def PrintLine(chrom, pos, res, f):
-    f.write("\t".join(map(str, [chrom, pos, res.params["gtsum"], res.pvalues["gtsum"]]))+"\n")
+def PrintLine(chrom, pos, testclass, res, nsamp, f):
+    f.write("\t".join(map(str, [chrom, pos, testclass, res.params["gtsum"], res.pvalues["gtsum"], nsamp]))+"\n")
+    f.flush()
+
+def GetAlleles(gts):
+    alleles = set()
+    for item in gts.values:
+        alleles.add(item[0])
+        alleles.add(item[1])
+    return list(alleles)
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
@@ -52,10 +61,19 @@ def main():
             gts.append(map(lambda x: allelelens[int(x)], sample.gt_alleles))
         gdata = pd.DataFrame({"sample": samples, "gts": gts})
         data = pd.merge(gdata, sdata, on=["sample"])
-        data["gtsum"] = data["gts"].apply(lambda x: sum(x))
         data["phenotype"] = data["phenotype"]-1
+        # Run on sum of allele lengths
+        data["gtsum"] = data["gts"].apply(lambda x: sum(x))
         res = RunRegression(data)
-        PrintLine(record.CHROM, record.POS, res, outf)
-
+        PrintLine(record.CHROM, record.POS, "locus", res, data.shape[0], outf)
+        # Run on each allele separately
+        alleles = GetAlleles(data["gts"])
+        for al in alleles:
+            data["gtsum"] = data.apply(lambda x: int(x["gts"][0]==al) + int(x["gts"][1]==al), 1)
+            try:
+                res = RunRegression(data)
+            except: continue
+            PrintLine(record.CHROM, record.POS, al, res, data.shape[0], outf)
+        
 if __name__ == "__main__":
     main()
