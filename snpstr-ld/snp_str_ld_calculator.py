@@ -137,7 +137,7 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
             snp_data.append(sum(sample_to_gts[sample]["SNP"]))
         het = GetHeterozygosity(allele_counts, mincount=mincount)
         if len(str_data) == 0:
-            sys.exit(1)
+            return []
         return [(scipy.stats.pearsonr(str_data, snp_data), "locus", het, maf, kldiv)]
 
 def GetHeterozygosity(allele_counts, mincount=0):
