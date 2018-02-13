@@ -10,4 +10,6 @@
 ./get_r2_snp.sh
 
 # Phenotype simulations
-./run_sims.sh
+./run_sims.sh # quant phenotype
+./run_sims_cc.sh # case control
+./run_examples.sh # examples for A, B plots
