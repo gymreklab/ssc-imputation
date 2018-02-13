@@ -12,7 +12,6 @@ import vcf
 
 COVARCOLS = ["C1","C2","C3","C4","C5","C6","C7","C9","C15","C18"]
 
-# TODO add back sex, cohort
 def RunRegression(data):
     formula = "phenotype ~ gtsum+C(sex)+C(cohort)+"+"+".join(COVARCOLS)
     pgclogit = logit(formula=formula, data=data).fit(disp=0)
@@ -64,16 +63,18 @@ def main():
         data["phenotype"] = data["phenotype"]-1
         # Run on sum of allele lengths
         data["gtsum"] = data["gts"].apply(lambda x: sum(x))
-        res = RunRegression(data)
+        try:
+            res = RunRegression(data)
+        except: continue
         PrintLine(record.CHROM, record.POS, "locus", res, data.shape[0], outf)
         # Run on each allele separately
-        alleles = GetAlleles(data["gts"])
-        for al in alleles:
-            data["gtsum"] = data.apply(lambda x: int(x["gts"][0]==al) + int(x["gts"][1]==al), 1)
-            try:
-                res = RunRegression(data)
-            except: continue
-            PrintLine(record.CHROM, record.POS, al, res, data.shape[0], outf)
+#        alleles = GetAlleles(data["gts"])
+#        for al in alleles:
+#            data["gtsum"] = data.apply(lambda x: int(x["gts"][0]==al) + int(x["gts"][1]==al), 1)
+#            try:
+#                res = RunRegression(data)
+#            except: continue
+#            PrintLine(record.CHROM, record.POS, al, res, data.shape[0], outf)
         
 if __name__ == "__main__":
     main()
