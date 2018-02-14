@@ -55,7 +55,10 @@ def PrintLine(str_locus, snp_locus, ld):
         sys.stdout.flush()
 
 def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0, minmaf=0, usefilter=False):
-    if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
+    try:
+        if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
+    except:
+        return [None]
     if usefilter:
         if not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): return [None]
         if not(snp_record.FILTER is None or snp_record.FILTER == "PASS" or len(snp_record.FILTER) == 0): return [None]
