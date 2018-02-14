@@ -255,9 +255,9 @@ def main():
         str_reader2 = vcf.Reader(open(args.str_vcf2, "rb"))
 
     # Get samples
-    samples = []
+    samples = set()
     if args.samples is not None:
-        samples = [item.strip() for item in open(args.samples, "r").readlines()]
+        samples = set([item.strip() for item in open(args.samples, "r").readlines()])
 
     ###### Case 1: Single SNP/STR ##########
     if args.str_locus:

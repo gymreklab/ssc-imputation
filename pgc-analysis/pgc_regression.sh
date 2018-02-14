@@ -5,8 +5,7 @@
 
 source params.sh
 
-#CHROM=$1
-CHROM=17
+CHROM=$1
 
 ./pgc_regression.py \
     --strvcf ${OUTDIR}/imputed/PGC_imputeSTR_chr${CHROM}.vcf.gz \

@@ -1,4 +1,5 @@
-OUTDIR=/scratch/gymrek/genomewide-imputation-pgc/
+REFPANEL=/home/gymrek/genomewide-imputation-pgc/refpanel/pgcregions/pgc_regions_snpstr_refpanel_sorted.vcf.gz
+OUTDIR=/home/gymrek/genomewide-imputation-pgc/
 SCRATCHDIR=${OUTDIR}/tmp/
 COVARFILE=/home/pgcdac/DWFV2CJb8Piv_0116_pgc_data/scz/wave2/v1/prune.bfile.cobg.PGC_SCZ49.sh2.menv.mds_cov
 COVARCOLS=C1,C2,C3,C4,C5,C6,C7,C9,C15,C18 # based on recommendation from S. Ripke
