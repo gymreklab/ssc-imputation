@@ -66,7 +66,7 @@ for i in range(len(alleles)):
         data[i,j] = r2
 
 fig = plt.figure()
-fig.set_size_inches((20, 5))
+fig.set_size_inches((25, 5))
 ax = fig.add_subplot(111)
 sns.heatmap(data, cmap=plt.cm.Blues, vmin=0, vmax=1, xticklabels=rsids, yticklabels=alleles, ax=ax, cbar=False);
 ax.set_xticklabels(ax.get_xticklabels(), rotation=80, size=10);
