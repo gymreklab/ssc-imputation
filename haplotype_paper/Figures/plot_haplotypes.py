@@ -21,8 +21,10 @@ from matplotlib import gridspec
 
 import pandas as pd
 import os
+import numpy as np
 import scipy.stats
 import sys
+import matplotlib.pyplot as plt
 
 try:
     locus = sys.argv[1]
@@ -30,9 +32,7 @@ try:
 except:
     sys.stderr.write(__doc__)
     sys.exit(1)
-
-VCF=/storage/s1saini/hipstr_allfilters/str_snp/chr${CHROM}.str.snp.feb18.vcf.gz
-
+OUTPATH="pdfs/"
 if locus == "RUNX2a":
     CHROM=6
     START=45390419
@@ -50,10 +50,10 @@ if locus == "JPH3":
     START=87637889
 if locus == "DM1":
     CHROM=19
-    START=46273463
+    START=46273457
 if locus == "SCA6":
     CHROM=19
-    START=13318673
+    START=13318669
 if locus == "ATXN7":
     CHROM=3
     START=63898361
@@ -71,7 +71,7 @@ if locus == "HOXD13":
     START=176957786
 
 ####### Extract haplotype info #######
-cmd="./extract_haplotypes.sh %s %s %s"%(CHROM, START, WINDOW)
+cmd="./extract_haplotypes.sh %s %s %s %s"%(CHROM, START, WINDOW, locus)
 os.system(cmd)
 
 ######## Plot haplotypes #############
@@ -79,7 +79,7 @@ sys.stderr.write("Plot for haplotypes...\n")
 # Read in haplotypes
 numhaps = 1916*2
 colnames = ["id","pos","ref","alt"] + ["hap_%s"%i for i in range(numhaps)]
-haplotypes = pd.read_csv("haplotypes_%s_%s.tab"%(CHROM, START), sep="\t",
+haplotypes = pd.read_csv("haplotypes_%s.tab"%(locus), sep="\t",
                         names=colnames, usecols=range(len(colnames)))
 haplotypes["vartype"] = haplotypes.apply(lambda x: ["SNP","STR"][int(len(x["ref"])>1)], 1)
 haplotypes.index = ["pos"+str(haplotypes["pos"].values[i]) for i in range(haplotypes.shape[0]-1)] + ["STR"]
@@ -99,7 +99,7 @@ hapcols = colnames[4:]
 haplotype_filt = haplotypes[hapcols].transpose()
 
 allsnps = [item for item in haplotype_filt.columns if "pos" in item]
-ar2 = pd.read_csv("snp_loci_alleler2_%s_%s.tab"%(CHROM, START), sep="\t")
+ar2 = pd.read_csv("snp_loci_alleler2_%s.tab"%(locus), sep="\t")
 ar2["pos"] = ar2["locus2"].apply(lambda x: "pos"+x.split(":")[1])
 ar2 = ar2[ar2["pos"].apply(lambda x: x in allsnps)]
 best_ar2 = ar2.groupby("pos", as_index=False).agg({"r2": max}).sort_values("r2", ascending=True)
@@ -151,8 +151,8 @@ def PlotHapmaptrix(hapmatrix, ar2, allele, allsnps, fname):
 for allele in sorted(list(set(str_allele_lengths))):
     hapmatrix = np.matrix(haplotype_filt[haplotype_filt["STR"]==allele][allsnps])
     if hapmatrix.shape[0]>= 10:
-        print("%s:%s"%(allele, hapmatrix.shape))
-        fname = os.path.join(OUTPATH, "PathogenicHaplotypes_%s_%s_%sExample%s.pdf"%(CHROM,START,allele))
+        sys.stderr.write("%s:%s\n"%(allele, hapmatrix.shape))
+        fname = os.path.join(OUTPATH, "PathogenicHaplotypes_%s_%s.pdf"%(locus,allele))
         PlotHapmaptrix(hapmatrix, ar2, allele, allsnps, fname)
 
 
