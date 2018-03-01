@@ -64,7 +64,9 @@ def main():
         allelelens = [0] + [len(item)-len(record.REF) for item in record.ALT]
         for sample in record:
             samples.append(sample.sample)
-            gts.append(map(lambda x: allelelens[int(x)], sample.gt_alleles))
+            if not record.is_snp: #"STR" in record.ID:
+                gts.append(map(lambda x: allelelens[int(x)], sample.gt_alleles))
+            else: gts.append(map(int, sample.gt_alleles))
         gdata = pd.DataFrame({"sample": samples, "gts": gts})
         data = pd.merge(gdata, sdata, on=["sample"])
         data["phenotype"] = data["phenotype"]-1
@@ -73,7 +75,7 @@ def main():
         try:
             res = RunRegression(data)
         except: continue
-        PrintLine(record.CHROM, record.POS, "locus", res, data.shape[0], outf)
+        PrintLine(record.CHROM, record.POS, record.ID, res, data.shape[0], outf)
         # Run on each allele separately
 #        alleles = GetAlleles(data["gts"])
 #        for al in alleles:
