@@ -7,13 +7,22 @@ import argparse
 import numpy as np
 import pandas as pd
 from statsmodels.formula.api import logit
+import statsmodels.api as sm
 import sys
 import vcf
 
+#def RunRegression(data):
+#    formula = "phenotype ~ gtsum"
+#    pgclogit = logit(formula=formula, data=data).fit(disp=0)
+#    return pgclogit
+
 def RunRegression(data):
-    formula = "phenotype ~ gtsum+C(sex)+C(cohort)+"+"+".join(COVARCOLS)
-    pgclogit = logit(formula=formula, data=data).fit(disp=0)
-    return pgclogit
+    X = np.array(data["gtsum"])
+    X = sm.add_constant(X)
+    Y = data["phenotype"]
+    model = sm.OLS(Y,X)
+    results = model.fit()
+    return results
 
 def PrintLine(chrom, pos, testclass, res, nsamp, f):
     f.write("\t".join(map(str, [chrom, pos, testclass, res.params["gtsum"], res.pvalues["gtsum"], nsamp]))+"\n")
