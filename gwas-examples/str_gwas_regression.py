@@ -25,7 +25,7 @@ def RunRegression(data):
     return results
 
 def PrintLine(chrom, pos, testclass, res, nsamp, f):
-    f.write("\t".join(map(str, [chrom, pos, testclass, res.params["gtsum"], res.pvalues["gtsum"], nsamp]))+"\n")
+    f.write("\t".join(map(str, [chrom, pos, testclass, res.params[1], res.pvalues[1], nsamp]))+"\n")
     f.flush()
 
 def GetAlleles(gts):
@@ -48,7 +48,7 @@ def main():
     else: outf = sys.stdout
 
     # Load sample metadata
-    sdata = pd.read_csv(args.sampledata, sep="\t", names=["sample","phenotype"])
+    sdata = pd.read_csv(args.sampledata, delim_whitespace=True, names=["sample","phenotype"])
     str_reader = vcf.Reader(open(args.strvcf, "rb"))
     str_records = str_reader
     if args.region:
