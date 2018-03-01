@@ -33,6 +33,13 @@ except:
     sys.stderr.write(__doc__)
     sys.exit(1)
 OUTPATH="pdfs/"
+
+if locus == "SCA12":
+    CHROM=5
+    START=146258291
+if locus == "VLDLR":
+    CHROM=9
+    START=2622145
 if locus == "RUNX2a":
     CHROM=6
     START=45390419
@@ -44,7 +51,7 @@ if locus == "ATN1":
     START=7045880
 if locus == "ATXN3":
     CHROM=14
-    START=92537353
+    START=92537355
 if locus == "JPH3":
     CHROM=16
     START=87637889
