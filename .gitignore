@@ -6,4 +6,5 @@ transfer.sh
 *.out
 *.err
 *.pyc
+*-checkpoint.ipynb*
 *.ipynb_checkpoints/*
