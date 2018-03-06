@@ -40,6 +40,7 @@ def main():
     parser.add_argument("--strvcf", help="VCF file with STR genotypes", required=True, type=str)
     parser.add_argument("--sampledata", help="Tab file with sample,phenotype for each sample", required=True, type=str)
     parser.add_argument("--out", help="Prefix for output files. Default: stdout", required=False, type=str)
+    parser.add_argument("--ptname", help="Regression genotype on this column", type=str, default="phenotype")
     parser.add_argument("--region", help="Restrict analysis to STRs in this region.", type=str)
     args = parser.parse_args()
 
@@ -48,7 +49,7 @@ def main():
     else: outf = sys.stdout
 
     # Load sample metadata
-    sdata = pd.read_csv(args.sampledata, delim_whitespace=True, names=["sample","phenotype"])
+    sdata = pd.read_csv(args.sampledata, delim_whitespace=True, names=["sample", args.ptname])
     str_reader = vcf.Reader(open(args.strvcf, "rb"))
     str_records = str_reader
     if args.region:
