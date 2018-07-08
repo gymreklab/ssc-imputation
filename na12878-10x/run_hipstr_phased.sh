@@ -10,14 +10,14 @@ done
 
 for phase in 1 2
 do
-    /home/mgymrek/workspace/HipSTR/HipSTR \
+    nohup /home/mgymrek/workspace/HipSTR/HipSTR \
 	--bams ${OUTDIR}/NA12878_10x_phase${phase}.bam \
 	--fasta ${REFFA} \
 	--regions ${REGIONS} \
 	--str-vcf ${OUTDIR}/NA12878_10x_phase${phase}.vcf.gz \
 	--log ${OUTDIR}/NA12878_10x_phase${phase}.log.txt \
-	--def-stutter-model --min-reads 10 \
+	--def-stutter-model --min-reads 5 \
 	--use-unpaired \
-	--haploid-chrs $HAPLOID
+	--haploid-chrs $HAPLOID &
 done
 
