@@ -4,6 +4,7 @@ BAM=/storage/resources/datasets/GM12878/10x/NA12878_WGS_v2_phased_possorted_bam.
 OUTDIR=/storage/mgymrek/ssc-imputation/na12878-10x
 REFFA=/storage/resources/dbase/human/hg19/hg19.fa
 REGIONS=/storage/resources/dbase/human/hg19/hg19.hipstr_reference.bed
+REGIONS2=/storage/resources/dbase/human/hs37d5/GRCh37.hipstr_reference.bed
 
 BESTSNPDIR=/storage/s1saini/manuscript_strsnp/fig3/snp_str_ld/
 

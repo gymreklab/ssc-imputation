@@ -8,8 +8,8 @@ source params.sh
 # Run HipSTR separately on each phase in haploid mode
 ./run_hipstr_phased.sh
 
-# Identify best SNP for each STR
+# Identify closest het snp for each str
 ./identify_snpstrs.sh
 
 # Extract 10X + panel gts for each snpstr
-./extract_phased_gts.sh
+./extract_phased_gts_v2.sh

@@ -3,23 +3,22 @@
 source params.sh
 
 # Extract heterozygous phased SNPs in NA12878
-bcftools query -f "%CHROM\t%POS\t[%GT]\n" $VCF10X | \
+bcftools query -f "%CHROM\t%POS\t[%GT]\t%FILTER\n" $VCF10X | grep PASS | \
     grep -v "/" | grep -v "0|0" | grep -v "1|1" | \
-    awk '{print $1 "\t" $2 "\t" $2+1}' | > ${OUTDIR}/na12878_het_snps.bed
+    awk '{print $1 "\t" $2-1 "\t" $2}'  > ${OUTDIR}/na12878_het_snps.bed
 
 # Intersect with SNPs in our panel
 for chrom in $(seq 1 22)
 do
     cat ${OUTDIR}/na12878_het_snps.bed | sed 's/chr//' | \
-	intersectBed -b ${KGDIR}/1kg.snp.str.chr${chrom}.vcf.gz -a stdin -f 1 
-done
+	intersectBed -a ${KGDIR}/1kg.snp.str.chr${chrom}.vcf.gz -b stdin -f 1 -wa -wb | \
+	awk '($2==$(NF))' | 
+	awk '{print $(NF-2) "\t" $(NF-1) "\t" $NF}'
+done > ${OUTDIR}/na12878_het_snps_inpanel.bed
+bedtools sort -i ${OUTDIR}/na12878_het_snps_inpanel.bed > ${OUTDIR}/na12878_het_snps_inpanel_sorted.bed
 
-#for chrom in $(seq 1 22)
-#do
-#done
-
-# To get best tag SNP
-#chrom=20
-#    cat ${BESTSNPDIR}/chr${chrom}_snp_str_ld_50k.txt | \
-#	datamash -H groupby 1 max 7 -f | cut -f 1,2,7 > \
-#	${OUTDIR}/snpstrs/snpstrs_${chrom}.tab
+# Get closest SNP to each STR
+closestBed -a ${REGIONS2} -b ${OUTDIR}/na12878_het_snps_inpanel_sorted.bed -d -io | \
+    awk '{print $1":"$2 "\t" $7":"$8 "\t" $10}' | grep -v "X:" | grep -v "Y:" > \
+    ${OUTDIR}/na12878_snpstrs.bed
+ 
