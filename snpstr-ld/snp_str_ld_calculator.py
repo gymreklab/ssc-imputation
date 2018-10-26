@@ -54,8 +54,11 @@ def PrintLine(str_locus, snp_locus, ld):
         sys.stdout.write("\t".join(map(str, [str_locus, snp_locus, allele, freq, maf, kldiv, ld_r2, ld_pval]))+"\n")
         sys.stdout.flush()
 
-def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0, minmaf=0, usefilter=False):
-    if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
+def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mincount=0, minmaf=0, usefilter=False, use_gb=False):
+    try:
+        if min([snp_record.aaf[0], 1-snp_record.aaf[0]]) < minmaf: return [None] # Assume SNP biallelic
+    except:
+        return [None]
     if usefilter:
         if not(str_record.FILTER is None or str_record.FILTER == "PASS" or len(str_record.FILTER) == 0): return [None]
         if not(snp_record.FILTER is None or snp_record.FILTER == "PASS" or len(snp_record.FILTER) == 0): return [None]
@@ -68,7 +71,13 @@ def CalcLD_r(str_record, snp_record, samples=[], str2=False, allele_r2=False, mi
     for sample in str_record:
         if len(samples)>0 and sample.sample not in samples: continue
         sample_to_gts[sample.sample] = {"STR": None, "SNP": None}
-        if None not in sample.gt_alleles:
+        if use_gb:
+            if sample["GB"] is None: continue
+            gb = sample["GB"].split("|")
+            if "." in gb: continue
+            else:
+                alleles = map(int, gb)
+        elif None not in sample.gt_alleles:
             alleles = map(lambda x: allelelens[int(x)], sample.gt_alleles)
         else: continue
         for a in alleles:
@@ -148,7 +157,8 @@ def GetHeterozygosity(allele_counts, mincount=0):
     freqs = [item*1.0/sum(counts) for item in counts]
     return 1-sum([item**2 for item in freqs])
 
-def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, mincount=0, minmaf=0, usefilter=False):
+def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, samples=[], allele_r2=False, \
+           mincount=0, minmaf=0, usefilter=False, use_gb=False):
     # Find STR record.
     chrom, start = str_locus.split(":")
     start = int(start)
@@ -176,7 +186,7 @@ def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, s
     # Find SNP record
     snp_chrom, snp_start = snp_locus.split(":")
     snp_start = int(snp_start)
-    records = snp_reader.fetch(snp_chrom, snp_start-1, snp_start)
+    records = snp_reader.fetch(snp_chrom, snp_start-1, snp_start+1)
     snp_record = None
     for r in records:
         snp_record = r
@@ -184,10 +194,10 @@ def CalcLD(str_reader, snp_reader, str_locus, snp_locus, use_info_start=False, s
     if snp_record is None:
         sys.stderr.write("Could not find SNP locus %s\n"%snp_locus)
         return [None]
-    if snp_record.POS != snp_start:
+    if abs(snp_record.POS-snp_start) >=2 :
         sys.stderr.write("ERROR: couldn't find SNP record for %s\n"%snp_start)
         return [None]
-    return CalcLD_r(str_record, snp_record, samples=samples, allele_r2=allele_r2, mincount=mincount, minmaf=minmaf, usefilter=usefilter)
+    return CalcLD_r(str_record, snp_record, samples=samples, allele_r2=allele_r2, mincount=mincount, minmaf=minmaf, usefilter=usefilter, use_gb=use_gb)
 
 def GetKLDivergence(allele_counts, allele_counts2, mincount, pcount=1):
     p = []
@@ -232,6 +242,7 @@ def main():
     parser.add_argument("--pairwise-snpstr", help="Calculate pairwise LD for all SNPs within maxdist of the STR", action="store_true")
     parser.add_argument("--max-dist", help="Don't consider snp/str more than this many bp apart", type=int, default=100000)
     parser.add_argument("--use-info-start", help="Match STR start on INFO/START (not POS)", action="store_true")
+    parser.add_argument("--use-gb", help="Use GB field to get allele lengths for STR", action="store_true")
     parser.add_argument("--samples", help="Only consider samples in this file. (e.g. founders)", type=str, required=False)
     parser.add_argument("--allele-r2", help="Calculate r2 *per allele* rather than per locus", action="store_true")
     parser.add_argument("--mincount", help="Remove STR genotypes with an allele of count < this", type=int, default=0)
@@ -252,9 +263,9 @@ def main():
         str_reader2 = vcf.Reader(open(args.str_vcf2, "rb"))
 
     # Get samples
-    samples = []
+    samples = set()
     if args.samples is not None:
-        samples = [item.strip() for item in open(args.samples, "r").readlines()]
+        samples = set([item.strip() for item in open(args.samples, "r").readlines()])
 
     ###### Case 1: Single SNP/STR ##########
     if args.str_locus:
@@ -266,7 +277,7 @@ def main():
             ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
                         use_info_start=args.use_info_start, samples=samples, \
                         allele_r2=args.allele_r2, mincount=args.mincount,
-                        minmaf=args.min_maf, usefilter=args.usefilter)
+                        minmaf=args.min_maf, usefilter=args.usefilter, use_gb=args.use_gb)
         elif args.snp_locus_rsid:
             snpid = args.snp_locus_rsid
             str_start = int(str_locus.split(":")[1])
@@ -325,7 +336,7 @@ def main():
                         snp_loci.append(snp_locus)
                 else:
                     snp_start = int(items[2])
-                    snp_loci = ["%s:%s"%(chrom, item) for item in snp_start.split(",")]
+                    snp_loci = ["%s:%s"%(chrom, item) for item in str(snp_start).split(",")]
                 for i in range(len(snp_loci)):
                     snp_locus = snp_loci[i]
                     snpid = snp_locus
@@ -333,7 +344,7 @@ def main():
                         snpid = rsids[i]
                     ld = CalcLD(str_reader, snp_reader, str_locus, snp_locus, \
                                 use_info_start=args.use_info_start, \
-                                samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
+                                samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter, use_gb=args.use_gb)
                     PrintLine(str_locus, snpid, ld)
 
     ###### Case 3: All SNP-STR pairwise ##########
@@ -355,7 +366,7 @@ def main():
             for snp_record in snp_records:
                 snp_locus = "%s:%s"%(snp_record.CHROM, snp_record.POS)
                 if snp_locus == str_locus: continue
-                ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
+                ld = CalcLD_r(str_record, snp_record, samples=samples, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter, use_gb=args.use_gb)
                 PrintLine(str_locus, snp_locus, ld)
 
     ###### Case 4: Compare two STR VCFs ######
@@ -376,7 +387,7 @@ def main():
             if str_record2 is None:
                 continue
             str_locus2 = "%s:%s"%(str_record2.CHROM, str_record2.POS)
-            ld = CalcLD_r(str_record, str_record2, samples=samples, str2=True, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter)
+            ld = CalcLD_r(str_record, str_record2, samples=samples, str2=True, allele_r2=args.allele_r2, mincount=args.mincount, minmaf=args.min_maf, usefilter=args.usefilter, use_gb=args.use_gb)
             PrintLine(str_locus, str_locus2, ld)
 
 if __name__ == "__main__":
