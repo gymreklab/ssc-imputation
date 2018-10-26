@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#PBS -lwalltime=2:00:00 -lnodes=1:ppn=1
+#PBS -lwalltime=1:00:00 -lnodes=1:ppn=1
 #PBS -d /home/gymrek/workspace/ssc-imputation/pgc-analysis
 
 source params.sh

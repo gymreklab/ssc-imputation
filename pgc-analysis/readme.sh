@@ -16,7 +16,22 @@ do
 done
 
 # Merge all files for each chrom
-./merge_cohort_results.sh ${chrom}
+for chrom in $(seq 1 22)
+do
+    ./merge_cohort_results.sh ${chrom}
+done
+
+# Merge all files for each chrom - SNPs
+for chrom in $(seq 1 22)
+do
+    echo $chrom
+    ./merge_cohort_results_snps.sh ${chrom}
+done
 
 # Perform regression analysis
-./pgc_regression.sh ${chrom}
+for chrom in $(seq 1 22)
+do
+    ./run_regression_wrapper.sh ${chrom}
+#    ./pgc_regression.sh ${chrom} 2> logs/regr_log_${chrom}.err
+done
+
