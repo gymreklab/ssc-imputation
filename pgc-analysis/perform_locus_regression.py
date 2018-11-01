@@ -20,7 +20,8 @@ import pandas as pd
 from statsmodels.formula.api import logit
 import sys
 
-COVARCOLS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C9", "C15", "C18", "cohort"] # add back sex? 
+#COVARCOLS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C9", "C15", "C18", "cohort", "sex"] # add back sex? 
+COVARCOLS = ["C1","C2","sex"]
 MINMAF=0.001
 
 def RunAndPrint(data, name, maf):
@@ -72,8 +73,8 @@ def main():
     # Regress on each SNP
     snpcols = [item for item in list(data.columns) if item.startswith("SNP_")]
     for item in snpcols:
-        data["genotype"] = data[item]
-        maf = GetMAF(data["genotype"])
+        data["genotype"] = data[item].apply(int)
+        maf = GetMAF(list(data["genotype"]))
         if maf < MINMAF or (1-maf) < MINMAF: continue
         RunAndPrint(data, item, maf)
 

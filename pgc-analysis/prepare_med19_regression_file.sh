@@ -19,12 +19,12 @@ snpcols=$(zcat $IMPUTEDVCF | \
 
 # Extract all SNP genotypes and sample names to a file
 zcat $IMPUTEDVCF | \
-    grep -w $SNPID | \
+    grep -w "$SNPID\|POS" | \
     grep -v "^\#\#" | \
     cut -f 2,10- | \
     sed 's/:[0-9|\.]*\t/\t/g' | \
     sed 's/0|0/0/g' | sed 's/0|1/1/g' | sed 's/1|0/1/g' | sed 's/1|1/2/g' | \
-    datamash transpose | sort -k 1,1 > ${SCRATCHDIR}/snp_genotypes.tab
+    datamash transpose  | grep -v POS | grep -v "0:0" | sort -k 1,1 > ${SCRATCHDIR}/snp_genotypes.tab
 
 # Extract STR genotype and sample names to a file
 bcftools query -r ${CHROM}:${POS}-${POS} -f '[%SAMPLE\t%TGT\n]' \
